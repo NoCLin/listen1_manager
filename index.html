@@ -1,0 +1,447 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <title>Listen1 Manager</title>
+
+    <link rel="stylesheet" href="./assets/css/elementui.css">
+    <link rel="stylesheet" href="./assets/css/custom.css">
+</head>
+
+<body>
+<!--vue调用ng-->
+<div id="listen1NgApi" ng-app="listen1NgApi" ng-controller="listen1NgApiController"></div>
+
+<div id="app">
+    <el-dialog :visible.sync="addAndEditDialogVisible"
+               width="80%"
+               height="80%"
+               :close-on-click-modal="false"
+               :center="true">
+        <span slot="title" class="el-dialog__title">
+            <div v-if="isAdd">添加</div>
+            <div v-if="!isAdd">正在编辑"{{currentModifyRow.title}}"</div>
+        </span>
+        <add-edit-dialog-content
+                ref="add-edit-dialog-content"
+                :track="currentModifyRow"
+                :isadd="isAdd"
+                @selected="handleEditComplete"
+                @added="handleAdded"
+                @play="playByTrack">
+        </add-edit-dialog-content>
+        <span slot="footer" class="dialog-footer">
+            <el-button @click="addAndEditDialogVisible = false">关闭窗口</el-button>
+        </span>
+    </el-dialog>
+    <el-dialog
+            title="批量导入"
+            :visible.sync="importDialogVisible"
+            width="80%"
+            height="80%"
+            :close-on-click-modal="false"
+            :center="true"
+    >
+
+        <import-dialog-content
+                ref="import-dialog-content"
+                @play="playByTrack"
+                @imported="handleImportedFromList">
+        </import-dialog-content>
+        <span slot="footer" class="dialog-footer">
+            <el-button @click="importDialogVisible = false">关闭窗口</el-button>
+        </span>
+    </el-dialog>
+
+    <el-container>
+        <el-main>
+
+            <el-tabs v-model="activeTabName">
+                <el-tab-pane name="Manager">
+                    <span slot="label"><i class="el-icon-edit"></i> Manager</span>
+
+                    <!--{{listen1Configs}}-->
+
+                    <!--编辑歌单-->
+
+                    <p>歌单:
+                        <el-select v-model="currentPlayListId" placeholder="请选择歌单">
+                            <el-option
+                                    v-for="playList in myPlaylists"
+                                    :key="playList.info.id"
+                                    :label="playList.info.title + '(' + playList.info.id + ')'"
+                                    :value="playList.info.id">
+                            </el-option>
+                        </el-select>
+                    </p>
+
+                    <div v-if="currentPlayListId!=''">
+
+
+                        <template>
+                            <el-table
+                                    ref="p  layListTable"
+                                    :data="playListTableData"
+                                    border
+                                    max-height="480"
+                                    style="width: 100%">
+                                <el-table-column
+                                        type="index"
+                                        fixed="left"
+                                        width="50">
+                                </el-table-column>
+                                <el-table-column
+                                        prop="source"
+                                        label="来源"
+                                        width="100">
+                                </el-table-column>
+                                <el-table-column
+                                        prop="title"
+                                        label="歌名"
+                                        width="180">
+                                    <template slot-scope="scope">
+                                        {{ scope.row.title }}
+                                        <br>
+                                        <el-popover trigger="hover" placement="top">
+                                            <div slot="reference" class="name-wrapper">
+                                                <el-tag size="medium">{{scope.row.id}}</el-tag>
+                                            </div>
+                                            <div v-html="scope.row">
+
+                                            </div>
+                                        </el-popover>
+                                    </template>
+                                </el-table-column>
+                                <el-table-column
+                                        prop="artist"
+                                        label="歌手"
+                                        width="180">
+                                    <template slot-scope="scope">
+                                        {{ scope.row.artist }}
+                                        <br>
+                                        <el-tag size="medium">{{scope.row.artist_id}}</el-tag>
+
+                                    </template>
+                                </el-table-column>
+                                <el-table-column
+                                        prop="album"
+                                        label="专辑"
+                                        width="300">
+                                    <template slot-scope="scope">
+                                        {{ scope.row.album }}
+                                        <br>
+                                        <el-tag size="medium">{{scope.row.album_id}}</el-tag>
+                                    </template>
+                                </el-table-column>
+                                <el-table-column
+                                        prop="status"
+                                        label="状态"
+                                        width="180">
+                                    <template slot-scope="scope">
+                                        {{status[scope.$index]}}
+                                        {{scope.$index}}
+                                    </template>
+                                </el-table-column>
+                                <el-table-column
+                                        fixed="right"
+                                        label="操作"
+                                >
+                                    <template slot-scope="scope">
+                                        <el-button icon="el-icon-edit" size="mini"
+                                                   @click="openEditDialog(scope.$index)">编辑
+                                        </el-button>
+                                        <el-button type="primary" size="mini" icon="el-icon-service"
+                                                   @click="playByTrack(scope.row)">试听
+                                        </el-button>
+                                        <el-button type="danger" size="mini" icon="el-icon-delete"
+                                                   @click="handleDeleteRow(scope.$index)">删除
+                                        </el-button>
+                                    </template>
+                                </el-table-column>
+                            </el-table>
+                        </template>
+
+                        <div class="control-buttons">
+                            <el-button type="primary" round @click="openAddDialog">添加</el-button>
+                            <el-button type="primary" round @click="openImportDialog">批量导入</el-button>
+                            <el-button type="primary" round @click="handleDownloadAll">开始下载</el-button>
+                        </div>
+
+                    </div>
+                </el-tab-pane>
+                <el-tab-pane name="Listen1">
+                    <span slot="label"><i class="el-icon-service"></i>Listen1</span>
+
+                    <iframe id="listen1_iframe" src="./listen1_chrome_extension/listen1.html"
+                            style="width:100vw;height:45vw;"></iframe>
+                </el-tab-pane>
+
+            </el-tabs>
+        </el-main>
+
+    </el-container>
+
+
+</div>
+
+<!--Listen1相关-->
+<script type="text/javascript" src="./listen1_chrome_extension/js/vendor/jquery-1.12.2.js"></script>
+<script type="text/javascript" src="./listen1_chrome_extension/js/vendor/angular.min.js"></script>
+<!--<script type="text/javascript" src="./listen1_chrome_extension/js/vendor/angular-soundmanager2.js"></script>-->
+<!--<script type="text/javascript" src="./listen1_chrome_extension/js/vendor/angular-ui-notification.js"></script>-->
+<!--<script type="text/javascript" src="./listen1_chrome_extension/js/vendor/hotkeys.js"></script>-->
+<script type="text/javascript" src="./listen1_chrome_extension/js/vendor/md5.js"></script>
+<script type="text/javascript" src="./listen1_chrome_extension/js/vendor/aes.js"></script>
+<script type="text/javascript" src="./listen1_chrome_extension/js/vendor/bigint.js"></script>
+<!--<script type="text/javascript" src="./listen1_chrome_extension/js/vendor/timer.js"></script>-->
+
+<!--<script type="text/javascript" src="./listen1_chrome_extension/js/github_api.js"></script>-->
+<!--<script type="text/javascript" src="./listen1_chrome_extension/js/github.js"></script>-->
+<!--<script type="text/javascript" src="./listen1_chrome_extension/js/lastfm.js"></script>-->
+
+<script type="text/javascript" src="./listen1_chrome_extension/js/lowebutil.js"></script>
+<script type="text/javascript" src="./listen1_chrome_extension/js/provider/xiami.js"></script>
+<script type="text/javascript" src="./listen1_chrome_extension/js/provider/qq.js"></script>
+<script type="text/javascript" src="./listen1_chrome_extension/js/provider/netease.js"></script>
+<script type="text/javascript" src="./listen1_chrome_extension/js/myplaylist.js"></script>
+<script type="text/javascript" src="./listen1_chrome_extension/js/loweb.js"></script>
+<!--<script type="text/javascript" src="./listen1_chrome_extension/js/app.js"></script>-->
+
+
+<script src="./assets/js/listen1Api.js"></script>
+
+<script src="./assets/js/lib/vue.min.js"></script>
+<script src="./assets/js/lib/elementui.min.js"></script>
+
+<script src="./assets/js/components/AddAndEditDialogContent.js"></script>
+<script src="./assets/js/components/ImportDialogContent.js"></script>
+
+<script>
+    // 解决Electron使用Jquery
+    if (typeof module === 'object') {
+        window.jQuery = window.$ = module.exports;
+    }
+
+    new Vue({
+        el: "#app",
+        data: {
+            importDialogVisible: false,
+            addAndEditDialogVisible: false,
+            activeTabName: "Listen1",
+            currentModifyRow: {},
+            currentModifyRowIndex: -1,
+            isAdd: false,
+            myPlaylists: [],
+            status: [],
+            playListTableData: [],
+            currentPlayListId: "",
+            lastPlayerNotify: null
+        },
+        computed: {},
+        watch: {
+            currentPlayListId: function (newId, oldId) {
+                console.log(newId + " selected from", oldId);
+                for (let i = 0, len = this.myPlaylists.length; i < len; i++) {
+                    if (this.myPlaylists[i].info.id === newId) {
+                        this.playListTableData = this.myPlaylists[i].tracks;
+                        this.status = [];
+                        for (let j = 0, len = this.myPlaylists[i].tracks.length; j < len; j++) {
+                            let track = this.myPlaylists[i].tracks[j];
+
+                            if (isCached(track.id)) {
+                                this.status.push("已缓存");
+                            } else {
+                                this.status.push("未缓存");
+                            }
+                        }
+                        break;
+                    }
+                }
+
+            },
+            activeTabName: function (newTab, oldTab) {
+                let w = document.getElementById("listen1_iframe").contentWindow;
+                delete w.require;// 解决Jquery
+                delete w.exports;
+                delete w.module;
+
+                if (newTab === "Listen1") {
+                    let doc = w.document;
+
+                    let ele_logo = doc.getElementsByClassName("logo")[0]
+                    ele_logo.click();
+
+                    let ele_body = w.document.getElementsByTagName("body")[0]
+
+                    let $scope = w.angular.element(ele_body).scope();
+                    console.log($scope)
+                    //
+                    //
+                    //$scope.showTag(4)调用无反应
+                    // console.log($scope.showTag)
+                    //
+
+                    // w.location = "./listen1_chrome_extension/listen1.html";
+                } else if (newTab === "Manager") {
+                    listen1_show_myplaylist().then(data => {
+                        this.myPlaylists = data.result;
+                        this.currentPlayListId = "";
+                    })
+                }
+
+            }
+
+        },
+        methods: {
+            playByTrack: function (track) {
+                if (this.lastPlayerNotify !== null) {
+                    this.lastPlayerNotify.close();
+                }
+
+                get_music_and_cache_by_id(track.id).then(url => {
+                    this.lastPlayerNotify = this.$notify({
+                        title: `正在播放 ${track.artist} - ${track.title}`,
+                        dangerouslyUseHTMLString: true,
+                        duration: 0,
+                        message: `<audio src="${url}" controls="controls" autoplay></audio>`,
+                        onClose: () => {
+                            this.lastPlayerNotify = null;
+                        }
+                    });
+                });
+            },
+            openEditDialog: function (index) {
+                this.currentModifyRow = JSON.parse(JSON.stringify(this.playListTableData[index]));
+                this.currentModifyRowIndex = index;
+                this.isAdd = false;
+                this.addAndEditDialogVisible = true;
+            },
+            pushToPlayListTable: function (row, index) {
+                // 将获取的track格式化,在此统一处理
+                // let track = {
+                //     "id": row.id,
+                //     "title": row.title,
+                //     "artist": row.artist,
+                //     "artist_id":row.artist_id,
+                //     "album": row.album,
+                //     "album_id": row.album_id,
+                //     "source": row.source,
+                //     "source_url": row.source_url,
+                //     "img_url": row.img_url,
+                //     "url": row.url,
+                //     // "lyric_url": "",// 只有虾米有lyric_url项
+                //     // "$$hashKey": "object:352" // 由angular no-repeat 产生
+                // };
+
+
+                if (row.disabled) {
+                    console.error("disabled", row);
+                    return false;
+                }
+
+                let track = row;
+                if (index === undefined) { //插入
+                    this.playListTableData.push(track);
+                } else {//修改某一行
+                    Vue.set(this.playListTableData, index, track); // 由于JS限制Vue无法检测对象属性的添加或删除
+                }
+                this.handleSave();
+
+            },
+            handleEditComplete: function (row) {
+                // let newVal = JSON.parse(JSON.stringify(row));
+
+                this.pushToPlayListTable(row, this.currentModifyRowIndex);
+                this.addAndEditDialogVisible = false;
+                this.$message({
+                    message: "编辑成功!",
+                    type: "success"
+                });
+            },
+            handleDownloadAll: function () {
+
+                for (let i = 0, len = this.playListTableData.length; i < len; i++) {
+                    let track = this.playListTableData[i];
+                    Vue.set(this.status, i, "正在下载 " + track.title);
+
+                    get_music_and_cache_by_id(track.id).then(url => {
+                        Vue.set(this.status, i, "成功");
+                    });
+
+                }
+
+            },
+            handleSave: function () {
+                let ids = [];
+                for (let i = 0; i < this.myPlaylists.length; i++) {
+                    let id = this.myPlaylists[i].info.id;
+                    ids.push(id);
+                    localStorage.setObject(id, this.myPlaylists[i]);
+                }
+                localStorage.setObject("playerlists", ids);
+
+            },
+
+            handleAdded: function (track) {
+                console.log("added", JSON.stringify(track))
+                this.pushToPlayListTable(track);
+                this.$notify({message: `"${track.title}"已经加入歌单!`, type: "success"});
+            },
+            handleImportedFromList: function (tracks) {
+                console.log(tracks);
+                for (let i = 0; i < tracks.length; i++) {
+                    this.playListTableData.push(tracks[i]);
+                }
+                this.$notify({message: "已经批量加入歌单!", type: "success"});
+            },
+            handleDeleteRow(index) {
+                this.$confirm("此操作将永久删除, 是否继续?", "警告", {type: "danger"}).then(() => {
+                    this.$notify({type: "success", message: "删除成功!"});
+                    this.playListTableData.splice(index, 1);
+                    this.handleSave();
+                }).catch(() => {
+                    this.$notify({type: "info", message: "已取消删除"});
+                });
+
+            },
+            openAddDialog: function () {
+                this.isAdd = true;
+                this.addAndEditDialogVisible = true;
+                // scrollTo(0,0); 无效
+            },
+            openImportDialog: function () {
+                this.importDialogVisible = true;
+            },
+
+            test() {
+                // shell.openExternal(link)
+                listen1_search("netease", "Tank").then((data) => {
+                    console.log("search", data);
+                });
+
+                // listen1_get_playlist("xmalbum_4058").then((data) => {
+                //     console.log("get_list", data)
+                // });
+                //
+                // listen1_get_track_url("xmtrack_49645").then((data) => {
+                //     console.log("get_url", data)
+                // })
+
+
+            },
+
+        },
+        mounted: function () {
+            initNgApi().then(() => {
+                listen1_show_myplaylist().then(data => {
+                    this.myPlaylists = data.result;
+                })
+            })
+        }
+    });
+</script>
+
+</body>
+
+</html>

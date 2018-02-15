@@ -1,0 +1,24 @@
+
+.control-buttons {
+    margin-top: 100px;
+}
+
+.select-source .el-select {
+    width: 130px;
+}
+
+.el-input-group__prepend {
+    background-color: #fff;
+}
+
+.el-input-group__append {
+    background-color: #fff;
+}
+
+body {
+    font: caption;
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    height: 100%;
+}

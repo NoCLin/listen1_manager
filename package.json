@@ -1,0 +1,27 @@
+{
+  "name": "listen1-manager",
+  "version": "0.0.1",
+  "description": "Listen1 Manager",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "packager:mac": "electron-packager . Listen1-Manager --overwrite --platform=darwin --arch=x64 --icon=./build/icon.icns --out=./dist --asar",
+    "packager:win": "electron-packager . Listen1-Manager --overwrite --platform=win32 --arch=x64 --icon=./build/icon.ico --out=./dist --asar",
+    "packager:linux": "electron-packager . Listen1-Manager --overwrite --platform=linux --arch=x64 --icon=./build/icon.png --out=./dist --asar",
+    "packager": "npm run packager:mac && npm run packager:win && npm run packager:linux"
+  },
+  "repository": "https://github.com/NoCLin/listen1-manager",
+  "keywords": [
+    "Listen1",
+    "Music",
+    "Electron"
+  ],
+  "author": "NoCLin",
+  "license": "MIT",
+  "devDependencies": {
+    "electron": "~1.7.8",
+    "electron-packager": "^11.0.1",
+    "eslint": "^4.17.0"
+  },
+  "dependencies": {}
+}
