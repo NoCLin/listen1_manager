@@ -1,5 +1,7 @@
 /* eslint-disable no-undef */
 
+let listen1 = require("../listen1.js");
+
 Vue.component("import-dialog-content", {
     data: function () {
         return {
@@ -14,13 +16,7 @@ Vue.component("import-dialog-content", {
     },
     props: [],
     methods: {
-        handleClick(tab, event) {
-            console.log(tab, event);
-            //
-            // this.handleSearchPlayList("http://www.xiami.com/collect/360902783?spm=a1z1s.3061697.6856253.5.A9ep7S");
-            // this.handleSearchPlayList("http://music.163.com/#/playlist?id=955990976");
-            // this.handleSearchPlayList("https://y.qq.com/n/yqq/playsquare/3714945310.html#stat=y_new.index.playlist.name");
-        },
+
         emitImport: function () {
             console.log("imported", this.$refs.resultTable.selection);
             this.$emit("imported", this.$refs.resultTable.selection);
@@ -39,14 +35,16 @@ Vue.component("import-dialog-content", {
             }
 
             console.log(playlist_id);
-            listen1_get_playlist(playlist_id).then(data => {
+            listen1.get_playlist(playlist_id).then(data => {
                 console.log(data);
+                // FIXME: 歌单太长时卡顿
                 this.temp_result = data.tracks;
             }).catch(err => {
                 console.log(err);
                 alert(err);
             });
         },
+        // TODO: 多种url规则匹配
         parserUrlToId: function (url) {
             String.prototype.getSubStr = function (startStr, endStr) {
                 let pos_start = this.indexOf(startStr) + startStr.length;

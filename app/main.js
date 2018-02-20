@@ -8,15 +8,14 @@ const BrowserWindow = electron.BrowserWindow;
 const path = require("path");
 const url = require("url");
 
-let iconPath = path.join(__dirname, "/build/icon.png");
-// Keep a global reference of the window object, if you don't, the window will
+// Keep a global reference of the window object, if you don"t, the window will
 // be closed automatically when the JavaScript object is garbage collected.
 let mainWindow;
 
 function initialTray(mainWindow) {
     const {app, Menu, Tray} = require("electron");
 
-    let trayIconPath = path.join(__dirname, "/build/icon_tray.png");
+    let trayIconPath = path.join(__dirname, "assets/icons/tray.png");
     let appTray = new Tray(trayIconPath);
 
     function toggleVisible() {
@@ -42,7 +41,7 @@ function initialTray(mainWindow) {
 
 function createWindow() {
 
-    // Form Listen1 PC
+    // Form Listen1 Desktop
     const session = require("electron").session;
     const filter = {
         urls: ["*://music.163.com/*", "*://*.xiami.com/*", "*://*.qq.com/*"]
@@ -99,6 +98,7 @@ function createWindow() {
     });
 
 
+    let iconPath = path.join(__dirname, "assets/icons/icon.png");
     // Create the browser window.
     mainWindow = new BrowserWindow({
         width: 1200,
@@ -114,42 +114,66 @@ function createWindow() {
     }));
 
 
-    let template = [{
-        label: "Application",
+    let template = [];
+
+    if (process.platform === "darwin") {
+        const name = electron.app.getName();
+        template.push({
+            label: name,
+            submenu: [
+                {label: `关于 ${name}`, role: "about"},
+                {type: "separator"},
+                {label: "服务", role: "services", submenu: []},
+                {type: "separator"},
+                {label: `隐藏 ${name}`, accelerator: "Command+H", role: "hide"},
+                {label: "隐藏其他", accelerator: "Command+Alt+H", role: "hideothers"},
+                {label: "全部显示", role: "unhide"},
+                {type: "separator"},
+                {
+                    label: `退出 ${name}`, accelerator: "Command+Q", click() {
+                        electron.app.quit();
+                    }
+                }
+            ]
+        });
+        template.push({
+            label: "编辑",
+            submenu: [
+                {label: "撤销", accelerator: "CmdOrCtrl+Z", selector: "undo:"},
+                {label: "重做", accelerator: "Shift+CmdOrCtrl+Z", selector: "redo:"},
+                {type: "separator"},
+                {label: "剪切", accelerator: "CmdOrCtrl+X", selector: "cut:"},
+                {label: "复制", accelerator: "CmdOrCtrl+C", selector: "copy:"},
+                {label: "粘贴", accelerator: "CmdOrCtrl+V", selector: "paste:"},
+                {label: "全选", accelerator: "CmdOrCtrl+A", selector: "selectAll:"}
+            ]
+        });
+    }
+
+    template.push({
+        label: "显示",
         submenu: [
-            {label: "About Application", selector: "orderFrontStandardAboutPanel:"},
+            // {label: "关于", selector: "orderFrontStandardAboutPanel:"},
             {type: "separator"},
             {
-                label: "Dev-Tools", accelerator: "Command+Option+I", click: function () {
-                    if (mainWindow.webContents.isDevToolsOpened())
-                        mainWindow.webContents.closeDevTools();
-                    else mainWindow.webContents.openDevTools();
+                label: "切换开发者工具",
+                accelerator: (process.platform === "darwin") ? "Option+Command+I" : "Ctrl+Shift+I",
+                click: () => {
+                    mainWindow.webContents.toggleDevTools();
                 }
             },
             {
-                label: "Refresh", accelerator: "Command+R", click: function () {
+                label: "刷新", accelerator: "CmdOrCtrl+R", click: function () {
                     mainWindow.webContents.reload();
                 }
             },
             {
-                label: "Quit", accelerator: "Command+Q", click: function () {
+                label: "退出", accelerator: "CmdOrCtrl+Q", click: function () {
                     app.quit();
                 }
             },
         ]
-    }, {
-        label: "Edit",
-        submenu: [
-            {label: "Undo", accelerator: "CmdOrCtrl+Z", selector: "undo:"},
-            {label: "Redo", accelerator: "Shift+CmdOrCtrl+Z", selector: "redo:"},
-            {type: "separator"},
-            {label: "Cut", accelerator: "CmdOrCtrl+X", selector: "cut:"},
-            {label: "Copy", accelerator: "CmdOrCtrl+C", selector: "copy:"},
-            {label: "Paste", accelerator: "CmdOrCtrl+V", selector: "paste:"},
-            {label: "Select All", accelerator: "CmdOrCtrl+A", selector: "selectAll:"}
-        ]
-    }
-    ];
+    });
 
     electron.Menu.setApplicationMenu(electron.Menu.buildFromTemplate(template));
 

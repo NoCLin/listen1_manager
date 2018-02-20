@@ -1,27 +1,76 @@
 {
-  "name": "listen1-manager",
-  "version": "0.0.1",
-  "description": "Listen1 Manager",
-  "main": "main.js",
+  "name": "listen1_manager",
+  "version": "0.0.2",
+  "description": "The playlist manager for listen1_chrome_extension project.",
+  "main": "app/main.js",
   "scripts": {
-    "start": "electron .",
-    "packager:mac": "electron-packager . Listen1-Manager --overwrite --platform=darwin --arch=x64 --icon=./build/icon.icns --out=./dist --asar",
-    "packager:win": "electron-packager . Listen1-Manager --overwrite --platform=win32 --arch=x64 --icon=./build/icon.ico --out=./dist --asar",
-    "packager:linux": "electron-packager . Listen1-Manager --overwrite --platform=linux --arch=x64 --icon=./build/icon.png --out=./dist --asar",
-    "packager": "npm run packager:mac && npm run packager:win && npm run packager:linux"
+    "start": "electron . --enable-logging",
+    "dev": "NODE_ENV='development' npm run start",
+    "builder:mac": "CSC_IDENTITY_AUTO_DISCOVERY=false DEBUG=electron-builder electron-builder --platform darwin",
+    "builder:win32": "electron-builder --win --ia32",
+    "builder:win64": "electron-builder --win --x64",
+    "builder:linux32": "electron-builder --linux --ia32",
+    "builder:linux64": "electron-builder --linux --x64",
+    "builder:win": "electron-builder --win --ia32 --x64",
+    "builder:linux": "electron-builder --linux --ia32 --x64",
+    "builder": "electron-builder .",
+    "packager:mac": "electron-packager . listen1_manager --overwrite --platform=darwin --out=./dist --arch=x64 --icon=./app/assets/icons/icon.icns ",
+    "packager:win32": "electron-packager . listen1_manager --overwrite --platform=win32 --out=./dist --arch=ia32 --icon=./app/assets/icons/icon.ico",
+    "packager:win64": "electron-packager . listen1_manager --overwrite --platform=win32 --out=./dist --arch=x64 --icon=./app/assets/icons/icon.ico ",
+    "packager:linux32": "electron-packager . listen1_manager --overwrite --platform=linux --out=./dist --arch=ia32 --icon=./app/assets/icons/icon.png ",
+    "packager:linux64": "electron-packager . listen1_manager --overwrite --platform=linux --out=./dist --arch=x64 --icon=./app/assets/icons/icon.png",
+    "packager:win": "npm run packager:win32 && npm run packager:win64",
+    "packager:linux": "npm run packager:linux32 && npm run packager:linux64",
+    "packager": "npm run packager:mac  && npm run packager:win  && npm run packager:linux"
   },
-  "repository": "https://github.com/NoCLin/listen1-manager",
+  "build": {
+    "productName": "listen1_manager",
+    "appId": "io.github.noclin.listen1_manager",
+    "asar": false,
+    "artifactName": "${name}_${version}_${os}${arch}.${ext}",
+    "directories": {
+      "output": "dist"
+    },
+    "dmg": {
+      "contents": [
+        {
+          "x": 410,
+          "y": 150,
+          "type": "link",
+          "path": "/Applications"
+        },
+        {
+          "x": 130,
+          "y": 150,
+          "type": "file"
+        }
+      ]
+    },
+    "mac": {
+      "icon": "app/assets/icons/icon.icns"
+    },
+    "win": {
+      "icon": "app/assets/icons/icon.ico"
+    },
+    "linux": {
+      "icon": "app/assets/icons"
+    }
+  },
+  "repository": "https://github.com/NoCLin/listen1_manager",
   "keywords": [
-    "Listen1",
-    "Music",
-    "Electron"
+    "listen1",
+    "music",
+    "electron"
   ],
-  "author": "NoCLin",
+  "author": "NoCLin <engineelin@gmail.com>",
   "license": "MIT",
   "devDependencies": {
     "electron": "~1.7.8",
+    "electron-builder": "^20.0.6",
     "electron-packager": "^11.0.1",
     "eslint": "^4.17.0"
   },
-  "dependencies": {}
+  "dependencies": {
+    "request": "^2.83.0"
+  }
 }
