@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Listen1 Manager</title>
+    <% if (htmlWebpackPlugin.options.nodeModules) { %>
+    <!-- Add `node_modules/` to global paths so `require` works properly in development -->
+    <script>
+        require('module').globalPaths.push('<%= htmlWebpackPlugin.options.nodeModules.replace(/\\/g, '\\\\') %>')
+    </script>
+    <% } %>
+</head>
+<body>
+<!--vue调用ng-->
+    <div id="listen1NgApi" ng-app="listen1NgApi" ng-controller="listen1NgApiController"></div>
+
+    <div id="app"></div>
+<!-- Set `__static` path to static files in production -->
+<script>
+    if (process.env.NODE_ENV !== 'development') window.__static = require('path').join(__dirname, '/static').replace(/\\/g, '\\\\')
+</script>
+
+<!--Listen1相关-->
+<script type="text/javascript" src="./static/listen1_chrome_extension/js/vendor/jquery-2.2.3.min.js"></script>
+<script type="text/javascript" src="./static/listen1_chrome_extension/js/vendor/angular.min.js"></script>
+<!--<script type="text/javascript" src="./static/listen1_chrome_extension/js/vendor/angular-soundmanager2.js"></script>-->
+<!--<script type="text/javascript" src="./static/listen1_chrome_extension/js/vendor/angular-ui-notification.js"></script>-->
+<!--<script type="text/javascript" src="./static/listen1_chrome_extension/js/vendor/hotkeys.js"></script>-->
+<script type="text/javascript" src="./static/listen1_chrome_extension/js/vendor/md5.js"></script>
+<script type="text/javascript" src="./static/listen1_chrome_extension/js/vendor/aes.js"></script>
+<script type="text/javascript" src="./static/listen1_chrome_extension/js/vendor/bigint.js"></script>
+<!--<script type="text/javascript" src="./static/listen1_chrome_extension/js/vendor/timer.js"></script>-->
+
+<!--<script type="text/javascript" src="./static/listen1_chrome_extension/js/github_api.js"></script>-->
+<!--<script type="text/javascript" src="./static/listen1_chrome_extension/js/github.js"></script>-->
+<!--<script type="text/javascript" src="./static/listen1_chrome_extension/js/lastfm.js"></script>-->
+
+<script type="text/javascript" src="./static/listen1_chrome_extension/js/lowebutil.js"></script>
+<script type="text/javascript" src="./static/listen1_chrome_extension/js/provider/xiami.js"></script>
+<script type="text/javascript" src="./static/listen1_chrome_extension/js/provider/qq.js"></script>
+<script type="text/javascript" src="./static/listen1_chrome_extension/js/provider/netease.js"></script>
+<script type="text/javascript" src="./static/listen1_chrome_extension/js/myplaylist.js"></script>
+<script type="text/javascript" src="./static/listen1_chrome_extension/js/loweb.js"></script>
+<!--<script type="text/javascript" src="./static/listen1_chrome_extension/js/app.js"></script>-->
+
+<script type="text/javascript">
+    // for listen1
+    Storage.prototype.setObject = function (key, value) {
+        this.setItem(key, JSON.stringify(value));
+    };
+    Storage.prototype.getObject = function (key) {
+        let value = this.getItem(key);
+        return value && JSON.parse(value);
+    };
+    // 解决Electron使用Jquery
+    if (typeof module === "object") {
+        window.jQuery = window.$ = module.exports;
+    }
+</script>
+<!-- webpack builds are automatically injected -->
+</body>
+</html>

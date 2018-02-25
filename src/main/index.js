@@ -1,8 +1,6 @@
-/* eslint-disable no-undef */
 const electron = require("electron");
-// Module to control application life.
 const app = electron.app;
-// Module to create native browser window.
+
 const BrowserWindow = electron.BrowserWindow;
 
 const path = require("path");
@@ -10,20 +8,23 @@ const url = require("url");
 
 // Keep a global reference of the window object, if you don"t, the window will
 // be closed automatically when the JavaScript object is garbage collected.
-let mainWindow;
+let mainWindow, appTray;
 
-function initialTray(mainWindow) {
-    const {app, Menu, Tray} = require("electron");
 
-    let trayIconPath = path.join(__dirname, "assets/icons/tray.png");
-    let appTray = new Tray(trayIconPath);
+if (process.env.NODE_ENV !== "development") {
+    global.__static = path.join(__dirname, "/static").replace(/\\/g, "\\\\");
+}
 
-    function toggleVisible() {
-        if (mainWindow.isVisible()) mainWindow.hide();
-        else mainWindow.show();
-    }
 
-    const contextMenu = Menu.buildFromTemplate([
+function toggleVisible() {
+    if (mainWindow.isVisible()) mainWindow.hide(); else mainWindow.show();
+}
+
+function initialTray() {
+    let trayIconPath = path.join(__static, "icons/tray.png");
+    appTray = new electron.Tray(trayIconPath);
+
+    const contextMenu = electron.Menu.buildFromTemplate([
         {
             label: "Show/Hide Window", click() {
                 toggleVisible();
@@ -35,87 +36,13 @@ function initialTray(mainWindow) {
             }
         },
     ]);
-    appTray.setToolTip("Listen Manager");
+    appTray.setToolTip("Listen1 Manager");
     appTray.setContextMenu(contextMenu);
 }
 
-function createWindow() {
-
-    // Form Listen1 Desktop
-    const session = require("electron").session;
-    const filter = {
-        urls: ["*://music.163.com/*", "*://*.xiami.com/*", "*://*.qq.com/*"]
-    };
-
-    function hack_referer_header(details) {
-        let referer_value = "";
-        if (details.url.indexOf("://music.163.com/") !== -1) {
-            referer_value = "http://music.163.com/";
-        }
-
-        if (details.url.indexOf(".xiami.com/") !== -1) {
-            referer_value = "http://m.xiami.com/";
-        }
-
-        if ((details.url.indexOf("y.qq.com/") !== -1) ||
-            (details.url.indexOf("qqmusic.qq.com/") !== -1) ||
-            (details.url.indexOf("music.qq.com/") !== -1) ||
-            (details.url.indexOf("imgcache.qq.com/") !== -1)) {
-            referer_value = "http://y.qq.com/";
-        }
-
-        let isRefererSet = false;
-        let isOriginSet = false;
-        let headers = details.requestHeaders;
-
-        for (let i = 0, l = headers.length; i < l; ++i) {
-            if ((headers[i].name === "Referer") && (referer_value !== "")) {
-                headers[i].value = referer_value;
-                isRefererSet = true;
-            }
-            if ((headers[i].name === "Origin") && (referer_value !== "")) {
-                headers[i].value = referer_value;
-                isOriginSet = true;
-            }
-        }
-
-        if ((!isRefererSet) && (referer_value !== "")) {
-            headers["Referer"] = referer_value;
-        }
-
-
-        if ((!isOriginSet) && (referer_value !== "")) {
-            headers["Origin"] = referer_value;
-        }
-
-        details.requestHeaders = headers;
-    }
-
-    session.defaultSession.webRequest.onBeforeSendHeaders(filter, function (details, callback) {
-        hack_referer_header(details);
-        details.requestHeaders["User-Agent"] = "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/50.0.2661.87 Safari/537.36";
-        callback({cancel: false, requestHeaders: details.requestHeaders});
-    });
-
-
-    let iconPath = path.join(__dirname, "assets/icons/icon.png");
-    // Create the browser window.
-    mainWindow = new BrowserWindow({
-        width: 1200,
-        height: 768,
-        icon: iconPath
-    });
-
-    // and load the index.html of the app.
-    mainWindow.loadURL(url.format({
-        pathname: path.join(__dirname, "index.html"),
-        protocol: "file:",
-        slashes: true
-    }));
-
+function initialMenu() {
 
     let template = [];
-
     if (process.platform === "darwin") {
         const name = electron.app.getName();
         template.push({
@@ -174,11 +101,93 @@ function createWindow() {
             },
         ]
     });
-
     electron.Menu.setApplicationMenu(electron.Menu.buildFromTemplate(template));
+}
 
-    initialTray(mainWindow);
+// code from https://github.com/listen1/listen1_desktop/blob/master/app/main.js
 
+function hack_referer_header(details) {
+    var refererValue = '';
+    if (details.url.indexOf("://music.163.com/") != -1) {
+        refererValue = "http://music.163.com/";
+    }
+
+    if (details.url.indexOf(".xiami.com/") != -1) {
+        refererValue = "http://m.xiami.com/";
+    }
+
+    if ((details.url.indexOf("y.qq.com/") != -1) ||
+        (details.url.indexOf("qqmusic.qq.com/") != -1) ||
+        (details.url.indexOf("music.qq.com/") != -1) ||
+        (details.url.indexOf("imgcache.qq.com/") != -1)) {
+        refererValue = "http://y.qq.com/";
+    }
+
+    var isRefererSet = false;
+    var headers = details.requestHeaders;
+
+    for (var i = 0, l = headers.length; i < l; ++i) {
+        if ((headers[i].name == 'Referer') && (refererValue != '')) {
+            headers[i].value = refererValue;
+            isRefererSet = true;
+            break;
+        }
+    }
+
+    if ((!isRefererSet) && (refererValue != '')) {
+        headers["Origin"] = refererValue;
+        headers["Referer"] = refererValue;
+    }
+    details.requestHeaders = headers;
+}
+
+function hack_request() {
+    const session = require('electron').session;
+
+    const filter = {
+        urls: ["*://music.163.com/*", "*://*.xiami.com/*", "*://*.qq.com/*",
+            "https://listen1.github.io/listen1/callback.html?code=*"]
+    };
+
+    session.defaultSession.webRequest.onBeforeSendHeaders(filter, function (details, callback) {
+        if (details.url.startsWith("https://listen1.github.io/listen1/callback.html?code=")) {
+            const url = details.url;
+            const code = url.split('=')[1];
+            mainWindow.webContents.executeJavaScript('Github.handleCallback("' + code + '");');
+        }
+        else {
+            hack_referer_header(details);
+            details.requestHeaders["User-Agent"] = "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/50.0.2661.87 Safari/537.36";
+            details.requestHeaders["X-DevTools-Request-Id"] = null;
+        }
+        callback({cancel: false, requestHeaders: details.requestHeaders});
+    });
+}
+
+function createWindow() {
+
+    hack_request();
+
+    let iconPath = path.join(__static, "icons/icon.png");
+    mainWindow = new BrowserWindow({
+        width: 1200,
+        height: 768,
+        icon: iconPath,
+        webPreferences: {webSecurity: false}
+    });
+
+    const winURL = (process.env.NODE_ENV === "development") ?
+        "http://localhost:9080" :
+        url.format({
+            pathname: path.join(__dirname, "index.html"),
+            protocol: "file:",
+            slashes: true
+        });
+
+    mainWindow.loadURL(winURL);
+
+    if (process.platform === "darwin") initialMenu();
+    initialTray();
 
     // Open the DevTools.
     // mainWindow.webContents.openDevTools()
@@ -195,7 +204,15 @@ function createWindow() {
 // This method will be called when Electron has finished
 // initialization and is ready to create browser windows.
 // Some APIs can only be used after this event occurs.
-app.on("ready", createWindow);
+app.on("ready", function () {
+    try {
+        createWindow();
+    } catch (e) {
+        console.error(e);
+        app.quit();
+    }
+
+});
 
 // Quit when all windows are closed.
 app.on("window-all-closed", function () {

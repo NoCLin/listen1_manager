@@ -1,88 +1,10 @@
 /* eslint-disable no-unused-vars,no-undef */
 
-
-let fs = require("fs");
-let os = require("os");
-let path = require("path");
-let request = require("request");
-
-const MANAGER_ROOT = (os.platform() === "win32") ? "C:\\listen1_manager" : path.join(os.homedir(), "listen1_manager");
-const CACHED_DIR = path.join(MANAGER_ROOT, "cached");
-
-
-require("./listen1_chrome_extension/js/vendor/angular.min.js");
-
-console.log("angular = ", angular);
-
-
-function mkdirSync(dirname) {
-    if (fs.existsSync(dirname)) return true;
-    else {
-        if (mkdirSync(path.dirname(dirname))) {
-            fs.mkdirSync(dirname);
-            return true;
-        }
-    }
-    return false;
-}
-
-if (!fs.existsSync(CACHED_DIR)) mkdirSync(CACHED_DIR);
-
-var listen1 = (function () {
-    "use strict";
-
-    function get_cached_path(track_id) {
-        return path.join(CACHED_DIR, track_id + ".mp3");
-    }
-
-
-    function downloadFile(uri, filename) {
-        return new Promise((resolve, reject) => {
-            let stream = fs.createWriteStream(filename);
-            request(uri).pipe(stream).on("close", () => {
-                resolve();
-            }).on("error", (err) => {
-                reject(err);
-            });
-
-        });
-    }
-
+let listen1 = (function () {
 
     let ngScope = null;
 
     return {
-
-        get_music_and_cache_by_id: function (track_id) {
-
-            return new Promise((resolve, reject) => {
-
-                let filepath = get_cached_path(track_id);
-
-                console.log("get_cached_path " + filepath);
-                // TODO: 嵌入APlayer支持
-                if (fs.existsSync(filepath)) {
-                    resolve(filepath);
-                } else {
-                    // return filepath;
-                    this.get_track_url(track_id).then((url) => {
-                        console.log("获取url成功", url);
-                        downloadFile(url, filepath).then(() => {
-                            console.log(`下载完毕 ${url} -> ${filepath}`);
-                            resolve(filepath);
-                        });
-
-                    }).catch((err) => {
-                        console.log("下载失败", err);
-                        reject(err);
-                    });
-
-
-                }
-            });
-
-
-        },
 
         init: function () {
             return new Promise(resolve => {
@@ -115,8 +37,7 @@ var listen1 = (function () {
                                 provider.bootstrap_track(sound, {"id": track_id},
                                     () => resolve(sound.url),
                                     () => {
-                                        console.log("bootstrap_track err");
-                                        reject();
+                                        reject("bootstrap_track error");
                                     }, $http, $httpParamSerializerJQLike);
                             });
 
@@ -133,7 +54,6 @@ var listen1 = (function () {
                 let timer = setInterval(() => {
                     tmp = _get();
                     i++;
-                    console.log("try to get scope", i);
                     if (tmp !== undefined) {
                         clearInterval(timer);
                         ngScope = tmp;
@@ -141,7 +61,10 @@ var listen1 = (function () {
                     } else if (i >= 10) {
                         clearInterval(timer);
                         reject();
+                    }else{
+                        console.log("Get Angular scope failed. ", i);
                     }
+
                 }, 100);// 100ms
 
             });
@@ -173,10 +96,7 @@ var listen1 = (function () {
             return Promise.resolve(ngScope.post(`/edit_myplaylist?list_id=${list_id}&title=${title}&cover_img_url=${cover_img_url}`));
         },
 
-        is_cached: function (track_id) {
-            return fs.existsSync(get_cached_path(track_id));
-        }
-
     };
 })();
-module.exports = listen1;
+
+export default listen1;

@@ -1,27 +1,35 @@
-# listen1-manager
+# listen1_manager
+
+listen1_manager，是一个基于 [listen1_chrome_extension](https://github.com/listen1/listen1_chrome_extension) 开发的音乐管理软件，旨在提供更好的音乐体验。
+
+你可以使用多个音乐平台的资源，制作自己的跨平台歌单。
 
 
-基于[listen1/listen1_chrome_extension](https://github.com/listen1/listen1_chrome_extension)开发的更全面的歌单管理工具。
+(目前已包含网易云音乐，QQ音乐，虾米音乐接口，来源于listen1_chrome_extension项目，同时保留了原项目的所有功能)。
 
+## Preview
 
-使用 Electron + Vue + ElementUI 开发，通过原生JS调用Angular接口获取实现音乐平台信息，同时保留了原listen1_desktop的所有功能。
-
+![Alt text](./screenshots/export_result.png)
 
 ## Features
 
-- Listen1歌单管理(CRUD)
-- 更方便的搜索功能
-    - 搜索结果整合  
-    
+- Listen1 歌单管理(CRUD)
+
+- ~~本地缓存~~
+  
+- 搜索结果整合
+
 - 批量导入
-    - 按列表导入
-    - 按歌单导入
-    - 按专辑导入
-    - 按歌手导入
-    
-- 整合Listen1 Desktop
+    - 由歌单
+    - 由专辑
+    - 由歌手
+    - 由歌名列表
+  
+- Listen1 Desktop整合
 
 ## Development
+
+技术栈: Electron + Vue + vue-electron
 
 ```bash
 
@@ -29,37 +37,42 @@ git submodule update --init --recursive
 
 yarn install
 
-yarn run start
-
-yarn run packager:mac
-yarn run packager:win
-yarn run packager:linux
+yarn run build
 
 ```
 
 ## Changelog
 
+**2018-2-25**
+
+[x] Vue-Electron重构
 
 **2018-2-14**
 
-基本功能实现
-
-
+[x] 基本功能实现
 
 ## TODOs
 
-- Vue-Webpack重构
+
 - 组件结构调整
+
 - 友好错误提示
 
+- 缓存管理
+ - 保存所有歌曲的ID、Artist、Album信息
+ - 歌词缓存
+ 
 - 搜索整合
     - 剔除大量翻唱结果
-- 搜索结果链接搜索
-- 歌单、歌手、专辑URL匹配
-- 搜索翻页
-- 试听显示歌词
-
-
+    - 翻页
+    - 搜索结果链接到新搜索
+ 
+- 导入功能    
+    - 按歌单、歌手、专辑URL匹配导入
+ 
+- 播放器    
+    
+- 应用最小化而不是退出
 
 ## License
 
