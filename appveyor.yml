@@ -19,8 +19,9 @@ init:
 
 install:
   - ps: Install-Product node 8 x64
-  - choco install yarn --ignore-dependencies
+  - npm i -g yarn
   - git reset --hard HEAD
+  - git submodule update --init --recursive
   - yarn
   - node --version
 

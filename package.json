@@ -55,8 +55,14 @@
       "icon": "static/icons/icon.ico"
     },
     "linux": {
-      "icon": "static/icons.png"
-    }
+      "icon": "static/icons"
+    },
+    "publish": [
+      {
+        "provider": "github",
+        "releaseType": "release"
+      }
+    ]
   },
   "dependencies": {
     "electron-log": "^2.2.14",

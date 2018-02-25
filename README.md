@@ -1,15 +1,22 @@
 # listen1_manager
 
-listen1_manager，是一个基于 [listen1_chrome_extension](https://github.com/listen1/listen1_chrome_extension) 开发的音乐管理软件，旨在提供更好的音乐体验。
+[![Build Status](https://travis-ci.org/NoCLin/listen1_manager.svg?branch=master)](https://travis-ci.org/NoCLin/listen1_manager)
+
+[![Build status](https://ci.appveyor.com/api/projects/status/x6k04nyrim34grfu?svg=true)](https://ci.appveyor.com/project/NoCLin/listen1-manager)
+
+listen1_manager是一个基于 [listen1_chrome_extension](https://github.com/listen1/listen1_chrome_extension) 开发的音乐管理软件，旨在提供更好的音乐体验。
 
 你可以使用多个音乐平台的资源，制作自己的跨平台歌单。
 
 
-(目前已包含网易云音乐，QQ音乐，虾米音乐接口，来源于listen1_chrome_extension项目，同时保留了原项目的所有功能)。
+
+(目前已包含网易云音乐，QQ音乐，虾米音乐接口，来源于listen1_chrome_extension项目，同时保留了原项目的所有功能)
 
 ## Preview
 
-![Alt text](./screenshots/export_result.png)
+**主界面**
+ 
+![main](./screenshots/main.png)
 
 ## Features
 
@@ -35,7 +42,7 @@ listen1_manager，是一个基于 [listen1_chrome_extension](https://github.com/
 
 git submodule update --init --recursive
 
-yarn install
+yarn
 
 yarn run build
 
