@@ -17,7 +17,9 @@ if (process.env.NODE_ENV !== "development") {
 
 
 function toggleVisible() {
-    if (mainWindow.isVisible()) mainWindow.hide(); else mainWindow.show();
+    if (mainWindow.isFocused() && mainWindow.isVisible()) {
+        mainWindow.hide();
+    } else mainWindow.show();
 }
 
 function initialTray() {
@@ -26,12 +28,12 @@ function initialTray() {
 
     const contextMenu = electron.Menu.buildFromTemplate([
         {
-            label: "Show/Hide Window", click() {
+            label: "显示/隐藏", click() {
                 toggleVisible();
             }
         },
         {
-            label: "Quit", click() {
+            label: "退出", click() {
                 app.quit();
             }
         },
@@ -172,33 +174,32 @@ function createWindow() {
     mainWindow = new BrowserWindow({
         width: 1200,
         height: 768,
+        minHeight: 650,
+        minWidth: 1120,
         icon: iconPath,
+        show: false,
         webPreferences: {webSecurity: false}
     });
 
-    const winURL = (process.env.NODE_ENV === "development") ?
-        "http://localhost:9080" :
-        url.format({
-            pathname: path.join(__dirname, "index.html"),
-            protocol: "file:",
-            slashes: true
-        });
+    const winURL = (process.env.NODE_ENV === "development") ? "http://localhost:9080" : url.format({
+        pathname: path.join(__dirname, "index.html"),
+        protocol: "file:",
+        slashes: true
+    });
 
     mainWindow.loadURL(winURL);
 
-    if (process.platform === "darwin") initialMenu();
-    initialTray();
+    if (process.env.NODE_ENV === "development") mainWindow.webContents.openDevTools();
 
-    // Open the DevTools.
-    // mainWindow.webContents.openDevTools()
-
-    // Emitted when the window is closed.
+    mainWindow.once("ready-to-show", () => {
+        mainWindow.show();
+    });
     mainWindow.on("closed", function () {
-        // Dereference the window object, usually you would store windows
-        // in an array if your app supports multi windows, this is the time
-        // when you should delete the corresponding element.
         mainWindow = null;
     });
+    
+    if (process.platform === "darwin") initialMenu();
+    initialTray();
 }
 
 // This method will be called when Electron has finished
