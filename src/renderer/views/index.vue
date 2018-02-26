@@ -273,6 +273,9 @@
                     <el-button type="primary" round @click="handleDownloadAll">开始下载</el-button>
 
                     <el-button type="primary" round @click="handleExport">导出歌单</el-button>
+
+                    <el-button v-if="isDev" round @click="test">测试</el-button>
+
                 </div>
             </el-footer>
         </el-container>
@@ -313,7 +316,8 @@
                 currentPlayList: {},
                 lastPlayerNotify: null,
                 exportStatusDialogVisible: false,
-                exportStatus: []
+                exportStatus: [],
+                isDev: process.env.NODE_ENV === 'development'
             };
         },
         computed: {},
@@ -567,18 +571,73 @@
 
             },
             test() {
-                // shell.openExternal(link)
-                listen1.search("netease", "Tank").then((data) => {
-                    console.log("search", data);
-                });
 
-                // listen1_get_playlist("xmalbum_4058").then((data) => {
-                //     console.log("get_list", data)
-                // });
-                //
-                // listen1_get_track_url("xmtrack_49645").then((data) => {
-                //     console.log("get_url", data)
-                // })
+                async function listen1_test() {
+                    const PROVIDERS = ["netease", "qq", "xiami"];
+                    const SEARCH_TITLE = "Tank";
+
+                    const PLAYLIST_ID_LIST = [
+                        "neplaylist_311126880",
+                        "neartist_5195",
+                        "nealbum_2709152",
+                        "qqplaylist_3746278836",
+                        "qqartist_003hyJQg0Mc80t",
+                        "qqalbum_000R5FAB2o8TR12",
+                        "xmplaylist_352786137",
+                        "xmartist_6in9397a",
+                        "xmalbum_b1CmS5l3fd68",
+                    ];
+
+                    const TRACK_ID_LIST = [
+                        "netrack_247940",
+                        "qqtrack_0032gzUn1AUkbT",
+                        "xmtrack_bcW7aeccf"
+                    ];
+
+                    // console.log("开始测试搜索");
+                    // for (let provider of PROVIDERS) {
+                    //     await listen1.search(provider, SEARCH_TITLE).then((data) => {
+                    //         console.log(`搜索 ${provider} ${SEARCH_TITLE} : ${data.result.length}`);
+                    //     });
+                    // }
+                    //
+                    // console.log("开始测试热门歌单");
+                    // for (let provider of PROVIDERS) {
+                    //     await listen1.get_hot_list(provider).then((data) => {
+                    //         console.log(`获取${provider}热门歌单 : 歌单数${data.result.length}`);
+                    //     });
+                    // }
+                    //
+                    // console.log("开始测试列表");
+                    // for (let id of PLAYLIST_ID_LIST) {
+                    //     await listen1.get_playlist(id).then((data) => {
+                    //         console.log(`获取列表 ${id} : 歌曲数${data.tracks.length}`);
+                    //     });
+                    // }
+
+                    console.log("开始测试获取歌曲链接、歌词");
+                    for (let id of TRACK_ID_LIST) {
+                        // await listen1.get_track_url(id).then((data) => {
+                        //     console.log(`获取歌曲链接 ${id} : ${data}`);
+                        // });
+                        await listen1.get_lyric(id).then((data) => {
+                            console.log(JSON.stringify(data));
+                            console.log(`获取歌词 ${id} : ${data.lyric.substring(0, 100)}`);
+                        });
+
+                        // await listen1.get_track_info(id).then((data) => {
+                        //     console.log(`获取歌曲信息 ${id} : ${JSON.stringify(data)}`);
+                        // });
+
+                    }
+
+                }
+
+                listen1_test().then(() => {
+                    alert("PASS")
+                }).catch(err => {
+                    alert("Test error " + err)
+                });
 
 
             },
@@ -589,6 +648,8 @@
                 listen1.get_my_playlist().then(data => {
                     this.myPlaylists = data.result;
                 });
+            }).catch((err) => {
+                alert("初始化Listen1组件失败!错误信息:" + err)
             });
         }
     }
