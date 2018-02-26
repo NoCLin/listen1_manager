@@ -1,8 +1,6 @@
 # listen1_manager
 
-[![Build Status](https://travis-ci.org/NoCLin/listen1_manager.svg?branch=master)](https://travis-ci.org/NoCLin/listen1_manager)
-
-[![Build status](https://ci.appveyor.com/api/projects/status/x6k04nyrim34grfu?svg=true)](https://ci.appveyor.com/project/NoCLin/listen1-manager)
+[![Build Status](https://travis-ci.org/NoCLin/listen1_manager.svg?branch=master)](https://travis-ci.org/NoCLin/listen1_manager) [![Build status](https://ci.appveyor.com/api/projects/status/x6k04nyrim34grfu?svg=true)](https://ci.appveyor.com/project/NoCLin/listen1-manager)
 
 listen1_manager是一个基于 [listen1_chrome_extension](https://github.com/listen1/listen1_chrome_extension) 开发的音乐管理软件，旨在提供更好的音乐体验。
 
@@ -39,16 +37,17 @@ listen1_manager是一个基于 [listen1_chrome_extension](https://github.com/lis
 技术栈: Electron + Vue + vue-electron
 
 ```bash
-
 git submodule update --init --recursive
-
 yarn
-
 yarn run build
 
 ```
 
 ## Changelog
+
+**2018-02-26** 
+
+[x] 接口简单测试、整理bugs
 
 **2018-2-25**
 
@@ -58,28 +57,7 @@ yarn run build
 
 [x] 基本功能实现
 
-## TODOs
-
-
-- 组件结构调整
-
-- 友好错误提示
-
-- 缓存管理
- - 保存所有歌曲的ID、Artist、Album信息
- - 歌词缓存
- 
-- 搜索整合
-    - 剔除大量翻唱结果
-    - 翻页
-    - 搜索结果链接到新搜索
- 
-- 导入功能    
-    - 按歌单、歌手、专辑URL匹配导入
- 
-- 播放器    
-    
-- 应用最小化而不是退出
+[TODOs](TODOs.md)
 
 ## License
 
