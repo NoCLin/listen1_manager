@@ -1,100 +1,40 @@
 <template>
 
-    <!--TODO:启动时loading-->
     <div>
-        <el-dialog :visible.sync="addAndEditDialogVisible"
-                   width="80%"
-                   height="80%"
-                   :close-on-click-modal="false"
-                   :center="true">
-        <span slot="title" class="el-dialog__title">
-            <div v-if="isAdd">添加</div>
-            <div v-if="!isAdd">正在编辑"{{currentModifyRow.title}}"</div>
-        </span>
-            <AddAndEditDialogContent
-                    :track="currentModifyRow"
-                    :isadd="isAdd"
-                    @selected="handleEditComplete"
-                    @added="handleAdded"
-                    @play="playByTrack">
-            </AddAndEditDialogContent>
-            <span slot="footer" class="dialog-footer">
-            <el-button @click="addAndEditDialogVisible = false">关闭窗口</el-button>
-        </span>
-        </el-dialog>
+        <SearchDialog
+                :track="currentModifyRow"
+                :isAdd="isAdd"
+                :visible="searchDialogVisible"
+                @selected="handleEditComplete"
+                @added="handleAdded"
+                @play="playByTrack"
+                @close="searchDialogVisible = false">
+        </SearchDialog>
 
-        <el-dialog :visible.sync="importDialogVisible" title="批量导入"
-                   width="80%"
-                   height="80%"
-                   :close-on-click-modal="false"
-                   :center="true"
-        >
+        <ImportDialog
+                :visible="importDialogVisible"
+                @play="playByTrack"
+                @imported="handleImportedFromList"
+                @close="importDialogVisible = false">
+        </ImportDialog>
 
-            <ImportDialogContent
-                    @play="playByTrack"
-                    @imported="handleImportedFromList">
-            </ImportDialogContent>
-            <span slot="footer" class="dialog-footer">
-            <el-button @click="importDialogVisible = false">关闭窗口</el-button>
-        </span>
-        </el-dialog>
-
-        <el-dialog :visible.sync="exportStatusDialogVisible" title="导出结果"
-                   width="80%"
-                   height="80%"
-                   :close-on-click-modal="false"
-                   :center="true"
-        >
-            <template>
-                <el-table
-                        :data="exportStatus"
-                        max-height="480"
-                        style="width: 100%">
-                    <el-table-column
-                            type="index"
-                            fixed="left"
-                            width="50">
-                    </el-table-column>
-                    <el-table-column
-                            prop="title"
-                            label="标题"
-                            width="400">
-                    </el-table-column>
-                    <el-table-column
-                            prop="status"
-                            label="状态"
-                            width="180">
-                        <template slot-scope="scope">
-                            <div v-if="'success' === scope.row.status">
-                                <el-tag type="success">导出成功</el-tag>
-                            </div>
-                            <div v-if="'uncached' === scope.row.status">
-                                <el-tag type="danger">请先缓存</el-tag>
-                            </div>
-                            <div v-if="'none' === scope.row.status">
-                                <el-tag type="danger">状态未知</el-tag>
-                            </div>
-                            <div v-if="'exists' === scope.row.status">
-                                <el-tag type="warning">文件已存在</el-tag>
-                            </div>
-                        </template>
-                    </el-table-column>
-                </el-table>
-                <el-button type="primary" round @click="handleOpenExportDir">打开导出目录</el-button>
-            </template>
-            <!--this.exportStatusDialogVisible = true;-->
-        </el-dialog>
-
+        <ExportDialog
+                :visible="exportDialogVisible"
+                :exportResult="exportResult"
+                @close="exportDialogVisible = false">
+        </ExportDialog>
 
         <el-container>
             <el-header>
                 <el-menu :default-active="activeTabName" @select="handleMenuSelected" menu-trigger="click"
                          mode="horizontal">
                     <el-submenu index="Manager">
-                        <template slot="title"><i class="el-icon-edit"></i> Manager</template>
+                        <template slot="title">
+                            <i class="el-icon-edit"></i>Manager
+                        </template>
 
                         <el-menu-item
-                                v-for="playList in myPlaylists"
+                                v-for="playList in myPlayLists"
                                 :index="playList.info.id"
                                 :key="playList.info.id">
                             {{playList.info.title}}
@@ -104,19 +44,19 @@
 
                     </el-submenu>
                     <el-menu-item index="Listen1"><i class="el-icon-service"></i>Listen1</el-menu-item>
+                    <el-menu-item index="test"><i class="el-icon-loading"></i>API测试</el-menu-item>
                 </el-menu>
             </el-header>
 
             <el-main style="padding: 0;" :class="{'listen1bg' : activeTabName === 'Listen1' }">
                 <div v-show="activeTabName === 'Manager'" style="padding: 8px;">
 
-
                     <el-row>
                         <el-col style="width:50vw; max-width: 500px;">
                             <el-row style="margin-top: 5px;">
                                 <el-select v-model="currentPlayListId" style="width:100%">
                                     <el-option
-                                            v-for="playList in myPlaylists"
+                                            v-for="playList in myPlayLists"
                                             :key="playList.info.id"
                                             :label="playList.info.title + '(' + playList.info.id + ')'"
                                             :value="playList.info.id">
@@ -125,10 +65,11 @@
                             </el-row>
                             <el-row style="margin-top: 5px; background: #475669;">
                                 <el-carousel ref="playlistCarousel" :autoplay="false" type="card"
+                                             trigger="click"
                                              @change="handlePlaylistCarouselChanged"
                                              height="200px"
                                 >
-                                    <el-carousel-item v-for="playList in myPlaylists" :key="playList.info.id"
+                                    <el-carousel-item v-for="playList in myPlayLists" :key="playList.info.id"
                                                       :name="playList.info.id">
                                         <div style="color:#fff; text-align: center">
                                             {{playList.info.title}}
@@ -168,7 +109,7 @@
                             <template>
                                 <el-table
                                         ref="playListTable"
-                                        :data="playListTableData"
+                                        :data="currentTracks"
                                         border
                                         max-height="365"
                                         style="width: 100%">
@@ -220,14 +161,14 @@
                                         </template>
                                     </el-table-column>
                                     <el-table-column
-                                            prop="status"
+                                            prop="cacheStatus"
                                             label="状态"
                                             width="100">
                                         <template slot-scope="scope">
-                                            <div v-if="'cached' === status[scope.$index]">
+                                            <div v-if="'cached' === cacheStatus[scope.$index]">
                                                 <el-tag type="success">已缓存</el-tag>
                                             </div>
-                                            <div v-if="'uncached' === status[scope.$index]">
+                                            <div v-if="'uncached' === cacheStatus[scope.$index]">
                                                 <el-tag type="danger">未缓存</el-tag>
                                             </div>
                                             <!--{{scope.$index}}-->
@@ -265,21 +206,18 @@
 
             <el-footer height="60px" :class="{'listen1bg' : activeTabName === 'Listen1' }">
 
-                <div class="control-buttons" v-show="activeTabName === 'Manager'">
-                    <el-button type="primary" round @click="openAddDialog">音乐搜索</el-button>
-                    <el-button type="primary" round @click="openImportDialog">批量导入</el-button>
-                    <!--TODO:整理导出功能-->
-
-                    <el-button type="primary" round @click="handleDownloadAll">开始下载</el-button>
-
-                    <el-button type="primary" round @click="handleExport">导出歌单</el-button>
-
-                    <el-button v-if="isDev" round @click="test">测试</el-button>
-
+                <div class="control-buttons" v-show="activeTabName === 'Manager'" style="margin-top: 10px;">
+                    <el-button type="primary" round @click="openAddDialog">搜索<i
+                            class="el-icon-search el-icon--right"></i></el-button>
+                    <el-button type="primary" round @click="openImportDialog">导入<i
+                            class="el-icon-upload el-icon--right"></i></el-button>
+                    <el-button type="primary" round @click="handleDownloadAll">下载<i
+                            class="el-icon-download el-icon--right"></i></el-button>
+                    <el-button type="primary" round @click="handleExport">导出<i
+                            class="el-icon-document el-icon--right"></i></el-button>
                 </div>
             </el-footer>
         </el-container>
-
 
     </div>
 </template>
@@ -290,55 +228,60 @@
 
     const Vue = require("vue").default;
 
-    const {shell} = require('electron');
-
-    const AddAndEditDialogContent = require("./components/AddAndEditDialogContent.vue").default;
-    const ImportDialogContent = require("./components/ImportDialogContent.vue").default;
+    const SearchDialog = require("./components/SearchDialog").default;
+    const ImportDialog = require("./components/ImportDialog").default;
+    const ExportDialog = require("./components/ExportDialog").default;
 
     const listen1 = require("../listen1.js").default;
     const utils = require("../utils.js").default;
 
     export default {
-        components: {AddAndEditDialogContent, ImportDialogContent},
+        components: {SearchDialog, ImportDialog, ExportDialog},
         data: function () {
             return {
                 importDialogVisible: false,
-                addAndEditDialogVisible: false,
+                searchDialogVisible: false,
+                exportDialogVisible: false,
                 activeIndex: "",
                 activeTabName: "Listen1",
                 currentModifyRow: {},
                 currentModifyRowIndex: -1,
                 isAdd: false,
-                myPlaylists: [],
-                status: [],
-                playListTableData: [],
+                myPlayLists: [],
+                cacheStatus: [],
+
                 currentPlayListId: "",
                 currentPlayList: {},
                 lastPlayerNotify: null,
-                exportStatusDialogVisible: false,
-                exportStatus: [],
+
+                exportResult: [],
                 isDev: process.env.NODE_ENV === 'development'
             };
         },
-        computed: {},
+        computed: {
+            currentTracks: function () {
+                return (this.currentPlayList.tracks !== undefined) ? this.currentPlayList.tracks : [];
+            }
+        },
         watch: {
             currentPlayListId: function (newId, oldId) {
 
                 this.$refs.playlistCarousel.setActiveItem(newId);
 
-                for (let i = 0, len = this.myPlaylists.length; i < len; i++) {
-                    if (this.myPlaylists[i].info.id === newId) {
+                for (let i = 0, len = this.myPlayLists.length; i < len; i++) {
+                    if (this.myPlayLists[i].info.id === newId) {
 
-                        this.currentPlayList = this.myPlaylists[i];
-                        this.playListTableData = this.myPlaylists[i].tracks;
-                        this.status = [];
-                        for (let j = 0, len = this.myPlaylists[i].tracks.length; j < len; j++) {
-                            let track = this.myPlaylists[i].tracks[j];
+                        this.currentPlayList = this.myPlayLists[i];
+                        console.log("切换列表", JSON.stringify(this.currentPlayList.info))
+                        // this.currentTracks = this.myPlaylists[i].tracks;
+                        this.cacheStatus = [];
+                        for (let j = 0, len = this.myPlayLists[i].tracks.length; j < len; j++) {
+                            let track = this.myPlayLists[i].tracks[j];
 
                             if (utils.is_track_cached(track.id)) {
-                                this.status.push("cached");
+                                this.cacheStatus.push("cached");
                             } else {
-                                this.status.push("uncached");
+                                this.cacheStatus.push("uncached");
                             }
                         }
                         break;
@@ -397,12 +340,12 @@
                 });
             },
             openEditDialog: function (index) {
-                this.currentModifyRow = JSON.parse(JSON.stringify(this.playListTableData[index]));
+                this.currentModifyRow = JSON.parse(JSON.stringify(this.currentTracks[index]));
                 this.currentModifyRowIndex = index;
                 this.isAdd = false;
-                this.addAndEditDialogVisible = true;
+                this.searchDialogVisible = true;
             },
-            pushToPlayListTable: function (row, index) {
+            updateTracks: function (row, index) {
                 // 将获取的track格式化,在此统一处理
                 // let track = {
                 //     "id": row.id,
@@ -427,19 +370,18 @@
 
                 let track = row;
                 if (index === undefined) { //插入
-                    this.playListTableData.push(track);
+                    this.currentTracks.push(track);
                 } else {//修改某一行
-
-                    Vue.set(this.playListTableData, index, track); // 由于JS限制Vue无法检测对象属性的添加或删除
+                    Vue.set(this.currentTracks, index, track); // 由于JS限制Vue无法检测对象属性的添加或删除
                 }
-                this.handleSave();
+                this.saveCurrentPlayList();
 
             },
             handleEditComplete: function (row) {
                 // let newVal = JSON.parse(JSON.stringify(row));
 
-                this.pushToPlayListTable(row, this.currentModifyRowIndex);
-                this.addAndEditDialogVisible = false;
+                this.updateTracks(row, this.currentModifyRowIndex);
+                this.searchDialogVisible = false;
                 this.$message({
                     message: "编辑成功!",
                     type: "success"
@@ -447,14 +389,14 @@
             },
             handleDownloadAll: function () {
 
-                for (let i = 0, len = this.playListTableData.length; i < len; i++) {
-                    let track = this.playListTableData[i];
+                for (let i = 0, len = this.currentTracks.length; i < len; i++) {
+                    let track = this.currentTracks[i];
 
-                    Vue.set(this.status, i, "正在下载 " + track.title);
+                    Vue.set(this.cacheStatus, i, "正在下载 " + track.title);
 
                     utils.get_music_and_cache_by_id(track.id).then(url => {
                         console.log("缓存成功！" + url);
-                        Vue.set(this.status, i, "成功");
+                        Vue.set(this.cacheStatus, i, "缓存成功");
                     });
 
                 }
@@ -462,10 +404,10 @@
             },
             handleExport: function () {
 
-                let result = new Array(this.playListTableData.length);
+                let result = new Array(this.currentTracks.length);
 
-                for (let i in  this.playListTableData) {
-                    let track = this.playListTableData[i];
+                for (let i in  this.currentTracks) {
+                    let track = this.currentTracks[i];
 
                     let filename = `${track.artist} - ${track.title}.mp3`;
                     filename = filename.replace("/", "");
@@ -474,10 +416,10 @@
 
                     result[i] = {
                         "title": filename,
-                        "status": "none"
+                        "exportStatus": "none"
                     };
 
-                    const DES_DIR = path.join(utils.MANAGER_ROOT, "export", this.currentPlayList.info.title);
+                    const DES_DIR = path.join(utils.EXPORT_DIR, this.currentPlayList.info.title);
                     utils.mkdirSync(DES_DIR);
 
                     const DES_PATH = path.join(DES_DIR, filename);
@@ -487,57 +429,59 @@
 
                     if (fs.existsSync(SRC_PATH)) {
                         if (fs.existsSync(DES_PATH) && fs.statSync(DES_PATH).size > 0) {
-                            result[i].status = "exists";
+                            result[i].exportStatus = "exists";
                         } else {
                             let fileReadStream = fs.createReadStream(SRC_PATH);
                             let fileWriteStream = fs.createWriteStream(DES_PATH);
                             fileReadStream.pipe(fileWriteStream);
                             fileWriteStream.on("close", function () {
-                                result[i].status = "success";
+                                result[i].exportStatus = "success";
                             });
                         }
                     } else {
-                        result[i].status = "uncached";
+                        result[i].exportStatus = "uncached";
                     }
                 }
 
-                this.exportStatus = result;
-                this.exportStatusDialogVisible = true;
+                this.exportResult = result;
+                this.exportDialogVisible = true;
 
                 console.log(result);
             },
-            handleOpenExportDir: function () {
-                shell.showItemInFolder(path.join(utils.MANAGER_ROOT, "export"))
-            },
+            saveCurrentPlayList: function () {
+                // listen1.save_myplaylist(this.currentPlayList);
 
-            handleSave: function () {
-                let ids = [];
-                for (let i = 0; i < this.myPlaylists.length; i++) {
-                    let id = this.myPlaylists[i].info.id;
-                    ids.push(id);
-                    localStorage.setObject(id, this.myPlaylists[i]);
+                // save All
+                // let ids = [];
+                for (let i = 0; i < this.myPlayLists.length; i++) {
+                    let id = this.myPlayLists[i].info.id;
+                    if (id === this.currentPlayList.info.id) {
+                        localStorage.setObject(id, this.myPlayLists[i]);
+                    }
+                    // ids.push(id);
+
                 }
-                localStorage.setObject("playerlists", ids);
-
+                // localStorage.setObject("playerlists", ids);
+                // save All
             },
 
             handleAdded: function (track) {
                 console.log("added track", JSON.stringify(track));
-                this.pushToPlayListTable(track);
-                this.$notify({message: `"${track.title}"已经加入歌单!`, type: "success"});
+                this.updateTracks(track);
+                this.$notify({message: `"${track.title}"已经加入歌单!`, type: "success", duration: 1000});
             },
             handleImportedFromList: function (tracks) {
                 console.log(tracks);
                 for (let i = 0; i < tracks.length; i++) {
-                    this.playListTableData.push(tracks[i]);
+                    this.currentTracks.push(tracks[i]);
                 }
                 this.$notify({message: "已经批量加入歌单!", type: "success"});
             },
             handleDeleteRow(index) {
                 this.$confirm("此操作将永久删除, 是否继续?", "警告", {type: "danger"}).then(() => {
                     this.$notify({type: "success", message: "删除成功!"});
-                    this.playListTableData.splice(index, 1);
-                    this.handleSave();
+                    this.currentTracks.splice(index, 1);
+                    this.saveCurrentPlayList();
                 }).catch(() => {
                     this.$notify({type: "info", message: "已取消删除"});
                 });
@@ -545,29 +489,38 @@
             },
             openAddDialog: function () {
                 this.isAdd = true;
-                this.addAndEditDialogVisible = true;
+                this.searchDialogVisible = true;
                 // scrollTo(0,0); 无效
             },
             openImportDialog: function () {
                 this.importDialogVisible = true;
             },
             handlePlaylistCarouselChanged(newIndex, oldIndex) {
-                // console.log(newIndex, oldIndex);
-                this.currentPlayListId = this.myPlaylists[newIndex].info.id;
+                this.currentPlayListId = this.myPlayLists[newIndex].info.id;
             },
             handleMenuSelected: function (index, indexPath) {
-                // console.log(index, indexPath);
                 if (index === "Listen1") {
                     this.activeTabName = index;
-                } else {
-                    this.activeTabName = indexPath[0];// Manager
+                } else if (index === "test") {
+                    this.test();
+                } else if (indexPath[0] === "Manager") {
+                    this.activeTabName = indexPath[0];// Manager,myplaylist_
                     if (index === "add") {
                         alert("add");
                     } else {
-                        this.currentPlayListId = index;
+                        this.currentPlayListId = indexPath[0];
                     }
                 }
 
+
+            },
+            reload: function () {
+                return new Promise((resolve) => {
+                    listen1.get_my_playlist().then(data => {
+                        this.myPlayLists = data.result;
+                        resolve(data.result.length)
+                    });
+                })
 
             },
             test() {
@@ -594,40 +547,36 @@
                         "xmtrack_bcW7aeccf"
                     ];
 
-                    // console.log("开始测试搜索");
-                    // for (let provider of PROVIDERS) {
-                    //     await listen1.search(provider, SEARCH_TITLE).then((data) => {
-                    //         console.log(`搜索 ${provider} ${SEARCH_TITLE} : ${data.result.length}`);
-                    //     });
-                    // }
-                    //
-                    // console.log("开始测试热门歌单");
-                    // for (let provider of PROVIDERS) {
-                    //     await listen1.get_hot_list(provider).then((data) => {
-                    //         console.log(`获取${provider}热门歌单 : 歌单数${data.result.length}`);
-                    //     });
-                    // }
-                    //
-                    // console.log("开始测试列表");
-                    // for (let id of PLAYLIST_ID_LIST) {
-                    //     await listen1.get_playlist(id).then((data) => {
-                    //         console.log(`获取列表 ${id} : 歌曲数${data.tracks.length}`);
-                    //     });
-                    // }
+                    console.log("开始测试搜索");
+                    for (let provider of PROVIDERS) {
+                        await listen1.search(provider, SEARCH_TITLE).then((data) => {
+                            console.log(`搜索 ${provider} ${SEARCH_TITLE} : ${data.result.length}`);
+                        });
+                    }
 
-                    console.log("开始测试获取歌曲链接、歌词");
+                    console.log("开始测试热门歌单");
+                    for (let provider of PROVIDERS) {
+                        await listen1.get_hot_list(provider).then((data) => {
+                            console.log(`获取${provider}热门歌单 : 歌单数${data.result.length}`);
+                        });
+                    }
+
+                    console.log("开始测试列表");
+                    for (let id of PLAYLIST_ID_LIST) {
+                        await listen1.get_playlist(id).then((data) => {
+                            console.log(`获取列表 ${id} : 歌曲数${data.tracks.length}`);
+                        });
+                    }
+
+                    console.log("开始测试获取获取歌曲信息");
                     for (let id of TRACK_ID_LIST) {
-                        // await listen1.get_track_url(id).then((data) => {
-                        //     console.log(`获取歌曲链接 ${id} : ${data}`);
-                        // });
+                        await listen1.get_track_info(id).then((data) => {
+                            console.log(`获取歌曲信息 ${id} : ${JSON.stringify(data)}`);
+                        });
                         await listen1.get_lyric(id).then((data) => {
-                            console.log(JSON.stringify(data));
+
                             console.log(`获取歌词 ${id} : ${data.lyric.substring(0, 100)}`);
                         });
-
-                        // await listen1.get_track_info(id).then((data) => {
-                        //     console.log(`获取歌曲信息 ${id} : ${JSON.stringify(data)}`);
-                        // });
 
                     }
 
@@ -645,9 +594,24 @@
         },
         mounted: function () {
             listen1.init().then(() => {
-                listen1.get_my_playlist().then(data => {
-                    this.myPlaylists = data.result;
-                });
+                this.reload().then(count => {
+                    console.log("歌单数", count);
+                    if (count === 0) {
+                        listen1.save_myplaylist({
+                            is_mine: 1,
+                            info: {
+                                'cover_img_url': '/static/listen1_chrome_extension/images/mycover.jpg',
+                                'title': "默认歌单",
+                                'id': '',
+                                'source_url': ''
+                            },
+                            tracks: []
+                        });
+                        console.log("创建默认歌单")
+                        this.reload();
+                    }
+                })
+
             }).catch((err) => {
                 alert("初始化Listen1组件失败!错误信息:" + err)
             });
