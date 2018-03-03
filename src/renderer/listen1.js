@@ -3,7 +3,7 @@
 let listen1 = (function () {
 
     let ngScope = null;
-
+    // TODO: Promise timeout race
     return {
 
         init: function () {
@@ -30,17 +30,7 @@ let listen1 = (function () {
                         };
 
                         $scope.get_track_url = function (track_id) {
-                            let provider = getProviderByItemId(track_id);
-                            let sound = {"url": ""};
-                            return new Promise(function (resolve, reject) {
-                                // function(sound, track, success, failure, hm, se)
-                                provider.bootstrap_track(sound, {"id": track_id},
-                                    () => resolve(sound.url),
-                                    () => {
-                                        reject("bootstrap_track error");
-                                    }, $http, $httpParamSerializerJQLike);
-                            });
-
+                            return Promise.resolve(this.get_track_info(track_id));
                         };
 
                         // 仅支持虾米
@@ -52,9 +42,8 @@ let listen1 = (function () {
                                 // function(sound, track, success, failure, hm, se)
                                 provider.bootstrap_track(sound, track,
                                     () => {
-                                        console.log("sound", sound);
-                                        console.log("track", track);
-
+                                        // console.log("sound", sound);
+                                        // console.log("track", track);
                                         resolve(Object.assign(sound, track));
                                     },
                                     () => {
@@ -113,15 +102,21 @@ let listen1 = (function () {
         // 获取歌词
         get_lyric: function (track_id) {
             return new Promise((resolve, reject) => {
-                // FIXME: 虾米需带上lyric_url参数 lyric_url由获取列表时生成
-                if (track_id.substring(0, 8) === "xmtrack_")
-                    return ngScope.get_track_info(track_id).then(data => {
-                        // TODO: 返回文本
-                        resolve({
-                            lyric: data.lyric_url,
-                            lyric_url: data.lyric_url
+                // FIXED: 虾米需带上lyric_url参数 lyric_url由获取列表时生成
+                if (track_id.substring(0, 8) === "xmtrack_") {
+                    ngScope.get_track_info(track_id).then(data => {
+                        fetch(data.lyric_url, {
+                            method: "get"
+                        }).then((response) => {
+                            return response.text();
+                        }).then(text => {
+                            resolve({
+                                lyric: text,
+                                lyric_url: data.lyric_url
+                            });
                         });
                     });
+                }
                 else resolve(ngScope.get(`/lyric?track_id=${track_id}`));
             });
         },
@@ -155,12 +150,25 @@ let listen1 = (function () {
         // parse_url
         // merge_playlist
 
-        edit_my_playlist: function (list_id, title, cover_img_url) {
-            return Promise.resolve(ngScope.post(`/edit_myplaylist?list_id=${list_id}&title=${title}&cover_img_url=${cover_img_url}`));
+        create_myplaylist: function (list_title, trackOrTrackJson) {
+            return Promise.resolve(ngScope.post({
+                url: "/create_myplaylist",
+                data: `list_title=${list_title}&track=${JSON.stringify(trackOrTrackJson)}`
+            }));
+        },
+        edit_myplaylist: function (list_id, title, cover_img_url) {
+            return Promise.resolve(ngScope.post({
+                url: "/edit_myplaylist",
+                data: `list_id=${list_id}&title=${title}&cover_img_url=${cover_img_url}`
+            }));
         },
 
         /** loweb.post **/
 
+        // 从playlist新建
+        save_myplaylist: function (playlist) {
+            myplaylist.save_myplaylist(playlist);
+        }
     };
 })();
 
