@@ -13,6 +13,7 @@ cache:
   - '%APPDATA%\npm-cache'
   - '%USERPROFILE%\.electron'
   - '%USERPROFILE%\AppData\Local\Yarn\cache'
+  - '%USERPROFILE%\AppData\Local\electron-builder'
 
 init:
   - git config --global core.autocrlf input
