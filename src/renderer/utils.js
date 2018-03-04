@@ -4,21 +4,21 @@ const path = require("path");
 const request = require("request");
 const listen1 = require("./listen1").default;
 
-export default (function () {
-    const MANAGER_ROOT = (os.platform() === "win32") ?
-        "C:\\listen1_manager" :
-        path.join(os.homedir(), "listen1_manager");
+const settings = require("../main/settings").default;
 
-    const CACHED_DIR = path.join(MANAGER_ROOT, "cached");
+export default (function () {
+
+    const CACHE_DIR = settings.CACHE_DIR;
+    // const EXPORT_DIR = settings.EXPORT_DIR;
 
     function to_cached_path(track_id) {
-        return path.join(CACHED_DIR, track_id + ".mp3");
+        return path.join(CACHE_DIR, track_id + ".mp3");
     }
 
-    function mkdirSync(dirname) {
+    function mkdirsSync(dirname) {
         if (fs.existsSync(dirname)) return true;
         else {
-            if (mkdirSync(path.dirname(dirname))) {
+            if (mkdirsSync(path.dirname(dirname))) {
                 fs.mkdirSync(dirname);
                 return true;
             }
@@ -38,7 +38,12 @@ export default (function () {
         });
     }
 
-    if (!fs.existsSync(CACHED_DIR)) mkdirSync(CACHED_DIR);
+    // TODO: 导出不要在view处理
+    function doExport() {
+
+    }
+
+    if (!fs.existsSync(CACHE_DIR)) mkdirsSync(CACHE_DIR);
 
 
     return {
@@ -76,9 +81,8 @@ export default (function () {
             return fs.existsSync(to_cached_path(track_id));
         },
         to_cached_path: to_cached_path,
-        mkdirSync: mkdirSync,
+        mkdirsSync: mkdirsSync,
         downloadFile: downloadFile,
-        MANAGER_ROOT:MANAGER_ROOT,
-        CACHED_DIR:CACHED_DIR
+        doExport: doExport,
     };
 })();

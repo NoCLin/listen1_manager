@@ -85,12 +85,15 @@
                         <el-col style="width:50vw; min-width: 100px;">
                             <div v-if="currentPlayList.info">
                                 <el-form ref="form" label-width="80px">
+                                    <el-form-item label="注意:">
+                                        将实时保存歌单信息
+                                    </el-form-item>
                                     <el-form-item label="ID">
                                         <el-input v-model="currentPlayList.info.id" disabled>
                                         </el-input>
                                     </el-form-item>
                                     <el-form-item label="标题">
-                                        <el-input v-model="currentPlayList.info.title">
+                                        <el-input v-model="currentPlayList.info.title" @change="saveCurrentPlayList">
                                         </el-input>
                                     </el-form-item>
                                     <el-form-item label="封面">
@@ -98,6 +101,15 @@
                                         </el-input>
                                         <!--注意:无法上传-->
                                     </el-form-item>
+
+                                    <el-form-item label="操作">
+
+                                        <el-button type="danger" @click="handleDeletePlayList">
+                                            删除歌单'{{currentPlayList.info.title}}'
+                                        </el-button>
+                                    </el-form-item>
+
+
                                 </el-form>
 
                             </div>
@@ -234,6 +246,7 @@
 
     const listen1 = require("../listen1.js").default;
     const utils = require("../utils.js").default;
+    const settings = require("../../main/settings.js").default;
 
     export default {
         components: {SearchDialog, ImportDialog, ExportDialog},
@@ -289,6 +302,10 @@
                 }
 
             },
+            currentPlayList: function (newVal, oldVal) {
+                console.log("currentPlayList Changed", newVal);
+            },
+
             activeTabName: function (newTab) {
                 let w = document.getElementById("listen1_iframe").contentWindow;
                 delete w.require;// 解决Jquery
@@ -304,7 +321,7 @@
                     let ele_body = w.document.getElementsByTagName("body")[0];
 
                     let $scope = w.angular.element(ele_body).scope();
-                    console.log($scope);
+                    console.log("iframe scope", $scope);
                     //
                     //
                     //$scope.showTag(4)调用无反应
@@ -419,8 +436,8 @@
                         "exportStatus": "none"
                     };
 
-                    const DES_DIR = path.join(utils.EXPORT_DIR, this.currentPlayList.info.title);
-                    utils.mkdirSync(DES_DIR);
+                    const DES_DIR = path.join(settings.EXPORT_DIR, this.currentPlayList.info.title);
+                    utils.mkdirsSync(DES_DIR);
 
                     const DES_PATH = path.join(DES_DIR, filename);
 
@@ -446,21 +463,45 @@
                 this.exportResult = result;
                 this.exportDialogVisible = true;
 
-                console.log(result);
+            },
+            handleDeletePlayList: function () {
+                if(this.currentPlayList.info.title === "默认歌单"){
+                    // TODO: 优化逻辑
+                    this.$notify({type: "info", message: "默认歌单无法删除"});
+                }else{
+                    this.$confirm("此操作将永久该歌单删除, 是否继续?", "警告", {type: "danger"}).then(() => {
+                        listen1.remove_myplaylist(this.currentPlayList.info.id);
+                        this.reload().then(() => {
+                            this.currentPlayListId = null;
+                            this.currentPlayList = {};
+
+                            this.$notify({type: "success", message: "删除成功!"});
+                        });
+
+                    }).catch((err) => {
+                        console.log(err)
+                        this.$notify({type: "info", message: "已取消删除"});
+                    });
+                }
+
+
+
             },
             saveCurrentPlayList: function () {
                 // listen1.save_myplaylist(this.currentPlayList);
+                console.log("saved");
+                listen1.update_myplaylist(this.currentPlayList);
 
                 // save All
                 // let ids = [];
-                for (let i = 0; i < this.myPlayLists.length; i++) {
-                    let id = this.myPlayLists[i].info.id;
-                    if (id === this.currentPlayList.info.id) {
-                        localStorage.setObject(id, this.myPlayLists[i]);
-                    }
-                    // ids.push(id);
-
-                }
+                // for (let i = 0; i < this.myPlayLists.length; i++) {
+                //     let id = this.myPlayLists[i].info.id;
+                //     if (id === this.currentPlayList.info.id) {
+                //         localStorage.setObject(id, this.myPlayLists[i]);
+                //     }
+                //     ids.push(id);
+                //
+                // }
                 // localStorage.setObject("playerlists", ids);
                 // save All
             },
@@ -506,9 +547,24 @@
                 } else if (indexPath[0] === "Manager") {
                     this.activeTabName = indexPath[0];// Manager,myplaylist_
                     if (index === "add") {
-                        alert("add");
+                        let title = "我的歌单" + new Date().getTime().toString();
+                        let new_id = listen1.update_myplaylist({
+                            is_mine: 1,
+                            info: {
+                                'cover_img_url': '/static/listen1_chrome_extension/images/mycover.jpg',
+                                'title': title,
+                                'source_url': ''
+                            },
+                            tracks: []
+                        });
+
+                        this.$message({showClose: true, message: "歌单(" + title + ")已新建", type: "success"});
+                        this.reload();
+
+                        this.currentPlayListId = new_id;
+
                     } else {
-                        this.currentPlayListId = indexPath[0];
+                        this.currentPlayListId = indexPath[1];
                     }
                 }
 
@@ -597,17 +653,16 @@
                 this.reload().then(count => {
                     console.log("歌单数", count);
                     if (count === 0) {
-                        listen1.save_myplaylist({
-                            is_mine: 1,
+
+                        listen1.update_myplaylist({
                             info: {
                                 'cover_img_url': '/static/listen1_chrome_extension/images/mycover.jpg',
                                 'title': "默认歌单",
-                                'id': '',
                                 'source_url': ''
                             },
                             tracks: []
                         });
-                        console.log("创建默认歌单")
+                        console.log("创建默认歌单");
                         this.reload();
                     }
                 })
@@ -622,7 +677,6 @@
 <style scoped>
 
     .el-header {
-        /*background-color: red;*/
         width: 100%;
         position: absolute;
         top: 0;
@@ -644,8 +698,6 @@
         /*height: 60px;*/
         position: absolute;
         bottom: 0;
-        /*background-color: #e1e1e1;*/
-        /*color: #000000;*/
     }
 
     .listen1bg {

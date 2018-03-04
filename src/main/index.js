@@ -1,15 +1,27 @@
 const electron = require("electron");
 const app = electron.app;
-
 const BrowserWindow = electron.BrowserWindow;
 
 const path = require("path");
 const url = require("url");
+const low = require("lowdb");
+const FileSync = require("lowdb/adapters/FileSync");
+
+const settings = require("./settings").default;
+
+const adapter = new FileSync(settings.DB_FILE);
+const db = low(adapter);
+
+// TODO:音乐、歌手数据库
+db.defaults({track: [], artist: {a: 1}})
+    .write();
+
 
 // Keep a global reference of the window object, if you don"t, the window will
 // be closed automatically when the JavaScript object is garbage collected.
 let mainWindow, appTray;
 
+// TODO: 全局配置文件
 
 if (process.env.NODE_ENV !== "development") {
     global.__static = path.join(__dirname, "/static").replace(/\\/g, "\\\\");
@@ -144,7 +156,7 @@ function hack_referer_header(details) {
 }
 
 function hack_request() {
-    const session = require('electron').session;
+    const session = require("electron").session;
 
     const filter = {
         urls: ["*://music.163.com/*", "*://*.xiami.com/*", "*://*.qq.com/*",
@@ -178,7 +190,10 @@ function createWindow() {
         minWidth: 1120,
         icon: iconPath,
         show: false,
-        webPreferences: {webSecurity: false}
+        webPreferences: {
+            webSecurity: false,
+            nodeIntegration: true
+        }
     });
 
     const winURL = (process.env.NODE_ENV === "development") ? "http://localhost:9080" : url.format({
@@ -194,10 +209,11 @@ function createWindow() {
     mainWindow.once("ready-to-show", () => {
         mainWindow.show();
     });
+
     mainWindow.on("closed", function () {
         mainWindow = null;
     });
-    
+
     if (process.platform === "darwin") initialMenu();
     initialTray();
 }

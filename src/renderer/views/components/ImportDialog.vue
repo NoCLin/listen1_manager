@@ -5,7 +5,8 @@
                    width="80%"
                    height="80%"
                    :close-on-click-modal="false"
-                   :center="true">
+                   :center="true"
+                   :show-close="false">
 
             <span slot="title" class="el-dialog__title">
                 <b>批量导入</b>
