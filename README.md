@@ -1,14 +1,14 @@
-# listen1_manager
+# listen1_manager [![Mac/Linux Build Status](https://img.shields.io/travis/NoCLin/listen1_manager.svg?label=Mac%20OSX%20%26%20Linux)](https://travis-ci.org/NoCLin/listen1_manager) [![Windows Build status](https://img.shields.io/appveyor/ci/NoCLin/listen1-manager.svg?label=Windows)](https://ci.appveyor.com/project/NoCLin/listen1-manager)
 
-[![Build Status](https://travis-ci.org/NoCLin/listen1_manager.svg?branch=master)](https://travis-ci.org/NoCLin/listen1_manager) [![Build status](https://ci.appveyor.com/api/projects/status/x6k04nyrim34grfu?svg=true)](https://ci.appveyor.com/project/NoCLin/listen1-manager)
-
-listen1_manager是一个基于 [listen1_chrome_extension](https://github.com/listen1/listen1_chrome_extension) 开发的音乐管理软件，旨在提供更好的音乐体验。
-
-你可以使用多个音乐平台的资源，制作自己的跨平台歌单。
+**注意: 本程序仅供学习用途，如有侵权，请邮件联系开发者改正。**
 
 
+*listen1_manager是一个跨平台的音乐管理解决方案，旨在提供更好的音乐体验。*
 
-(目前已包含网易云音乐，QQ音乐，虾米音乐接口，来源于listen1_chrome_extension项目，同时保留了原项目的所有功能)
+它基于 [listen1_chrome_extension](https://github.com/listen1/listen1_chrome_extension)和**Electron**开发，支持MacOS、Linux和Windows。
+
+你可以使用多个音乐平台(目前已包含网易云音乐，QQ音乐，虾米音乐接口)的资源，并制作自己的跨平台歌单。
+
 
 ## Preview
 
@@ -34,28 +34,40 @@ listen1_manager是一个基于 [listen1_chrome_extension](https://github.com/lis
 
 ## Development
 
-技术栈: Electron + Vue + vue-electron
+*技术栈: Electron + Vue + vue-electron + ElementUI*
 
 ```bash
-git submodule update --init --recursive
-yarn
-yarn run build
+git clone https://github.com/NoCLin/listen1_manager.git
 
+cd listen1_manager
+
+git submodule update --init --recursive
+
+yarn && yarn run dev
 ```
 
 ## Changelog
 
+**2018-03-04**
+
+- 添加新建歌单、删除歌单功能
+
+**2018-03-03** 
+
+- 修复虾米歌词接口bug
+- 组件结构调整
+
 **2018-02-26** 
 
-[x] 接口简单测试、整理bugs
+- 接口简单测试、整理bugs
 
 **2018-2-25**
 
-[x] Vue-Electron重构
+- 使用Vue-Electron重构
 
 **2018-2-14**
 
-[x] 基本功能实现
+- 基本功能实现
 
 [TODOs](TODOs.md)
 

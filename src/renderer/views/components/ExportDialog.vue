@@ -2,9 +2,10 @@
     <div>
 
         <el-dialog :visible.sync="visible" title="导出结果"
-                   width="80%"
                    height="80%"
-                   :center="true">
+                   :center="true"
+                   :close-on-click-modal="false"
+                   :show-close="false">
             <el-table
                     :data="exportResult"
                     max-height="480"
@@ -41,7 +42,7 @@
             </el-table>
             <span slot="footer" class="dialog-footer">
                 <el-button type="primary" round @click="handleOpenExportDir">打开导出目录</el-button>
-                <el-button @click="emitClose">关闭窗口</el-button>
+                <el-button round @click="emitClose">关闭窗口</el-button>
             </span>
         </el-dialog>
 
@@ -49,8 +50,9 @@
 
 </template>
 <script>
-    const utils = require("../../utils.js").default;
     const {shell} = require('electron');
+    const utils = require("../../utils.js").default;
+
     export default {
         data: function () {
             return {};

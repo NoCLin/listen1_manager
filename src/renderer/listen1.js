@@ -162,13 +162,51 @@ let listen1 = (function () {
                 data: `list_id=${list_id}&title=${title}&cover_img_url=${cover_img_url}`
             }));
         },
+        remove_myplaylist: function (list_id) {
+            return Promise.resolve(ngScope.post({
+                url: "/remove_myplaylist",
+                data: `list_id=${list_id}`
+            }));
+        },
 
         /** loweb.post **/
 
         // 从playlist新建
         save_myplaylist: function (playlist) {
             myplaylist.save_myplaylist(playlist);
+        },
+        // 更新歌单 不存在则新建
+        update_myplaylist: function (playlist) {
+            function guid() {
+                function s4() {
+                    return Math.floor((1 + Math.random()) * 0x10000)
+                        .toString(16)
+                        .substring(1);
+                }
+
+                return s4() + s4() + "-" + s4() + "-" + s4() + "-" +
+                    s4() + "-" + s4() + s4() + s4();
+            }
+            let isExist = false;
+            let idList = localStorage.getObject("playerlists");
+
+            if (idList == null) idList = [];
+            else if (playlist.info.id !== undefined) {
+                for (let id of idList)
+                    if (playlist.info.id === id) isExist = true;
+            }
+
+            if (!isExist) {
+                playlist.info.id = "myplaylist_" + guid();
+                playlist.is_mine = 1;
+                idList.push(playlist.info.id);
+                localStorage.setObject("playerlists", idList);
+            }
+            localStorage.setObject(playlist.info.id, playlist);
+            return playlist.info.id;
         }
+
+
     };
 })();
 

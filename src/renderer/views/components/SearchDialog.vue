@@ -5,7 +5,8 @@
                    width="80%"
                    height="80%"
                    :close-on-click-modal="false"
-                   :center="true">
+                   :center="true"
+                   :show-close="false">
 
         <span slot="title" class="el-dialog__title">
             <b v-if="isAdd">添加</b>
@@ -36,7 +37,8 @@
             <el-table ref="singleTable"
                       :data="temp_search_result"
                       v-loading="tableLoading"
-                      style="width: 100%">
+                      style="width: 100%"
+                      max-height="365">
                 <el-table-column type="index" width="50">
                 </el-table-column>
                 <el-table-column prop="source" label="来源" width="100">
@@ -90,6 +92,7 @@
 </template>
 <script>
     const listen1 = require("../../listen1.js").default;
+    const utils = require("../../utils.js").default;
     export default {
         data: function () {
             return {

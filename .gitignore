@@ -41,10 +41,6 @@ jscoverage_lib/
 bower_components/  
 dist/
 
-yarn.lock
-/listen1_backup.json
-
-
 dist/electron/*
 dist/web/*
 build/*

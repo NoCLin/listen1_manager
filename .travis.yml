@@ -1,24 +1,23 @@
-osx_image: xcode8.3
 sudo: required
-dist: trusty
-language: node_js
+node_js: "8"
+
 matrix:
   include:
-  - os: osx
+    - os: osx
+      osx_image: xcode9.2
+      language: node_js
+      env:
+        - ELECTRON_CACHE=$HOME/.cache/electron
+        - ELECTRON_BUILDER_CACHE=$HOME/.cache/electron-builder
+
   - os: linux
-    env: CC=clang CXX=clang++ npm_config_clang=1
-    compiler: clang
-
-
-node_js:
-  - 'lts/*'
-#  - '8'
+    language: node_js
 
 cache:
   directories:
   - node_modules
-  - "$HOME/.electron"
-  - "$HOME/.cache"
+  - $HOME/.cache/electron
+  - $HOME/.cache/electron-builder
 
 before_install:
   - npm install -g yarn
