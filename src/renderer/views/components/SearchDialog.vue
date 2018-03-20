@@ -2,7 +2,7 @@
     <div>
 
         <el-dialog :visible.sync="visible"
-                   width="80%"
+                   width="90%"
                    height="80%"
                    :close-on-click-modal="false"
                    :center="true"
@@ -37,7 +37,7 @@
             <el-table ref="singleTable"
                       :data="temp_search_result"
                       v-loading="tableLoading"
-                      style="width: 100%"
+                      style="width: 100%;-webkit-user-select: text;"
                       max-height="365">
                 <el-table-column type="index" width="50">
                 </el-table-column>
@@ -57,7 +57,7 @@
                         </el-tooltip>
                     </template>
                 </el-table-column>
-                <el-table-column prop="album" label="专辑" width="300">
+                <el-table-column prop="album" label="专辑" width="180">
                     <template slot-scope="scope">
                         <el-tooltip class="item" effect="dark" :content="scope.row.album_id" placement="top">
                             <el-tag size="medium">{{scope.row.album}}</el-tag>
@@ -67,22 +67,25 @@
 
                 <el-table-column fixed="right" label="操作">
                     <template slot-scope="scope">
-                        <el-button type="primary" size="mini" icon="el-icon-service" @click="emitPlay(scope.row)">试听
-                        </el-button>
-                        <el-button type="primary" size="mini" v-if="isAdd" icon="el-icon-success"
-                                   @click="emitAdded(scope.row)">
-                            加入歌单
-                        </el-button>
-                        <el-button type="primary" size="mini" v-if="!isAdd" icon="el-icon-circle-plus-outline"
-                                   @click="emitSelected(scope.row)">选择
-                        </el-button>
+                        <el-button-group>
+                            <el-button type="primary" icon="el-icon-service"
+                                       @click="emitPlay(scope.row)">试听
+                            </el-button>
+                            <el-button type="primary" v-if="isAdd" icon="el-icon-success"
+                                       @click="emitAdded(scope.row)">加入
+                            </el-button>
+                            <el-button type="primary" v-if="!isAdd" icon="el-icon-circle-plus-outline"
+                                       @click="emitSelected(scope.row)">选择
+                            </el-button>
+                        </el-button-group>
+
 
                     </template>
                 </el-table-column>
             </el-table>
             <!--TODO: 分页-->
-            <el-pagination small layout="prev, pager, next" :total="50">
-            </el-pagination>
+            <!--<el-pagination  layout="prev, pager, next" :total="50">-->
+            <!--</el-pagination>-->
             <span slot="footer" class="dialog-footer">
             <el-button @click="emitClose">关闭窗口</el-button>
         </span>

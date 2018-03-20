@@ -4,6 +4,14 @@ let listen1 = (function () {
 
     let ngScope = null;
     // TODO: Promise timeout race
+    const TIMEOUT = 5000;
+
+    function delayPromise(ms = TIMEOUT) {
+        return new Promise((resolve, reject) => {
+            setTimeout(reject, ms);
+        });
+    }
+
     return {
 
         init: function () {
@@ -66,15 +74,12 @@ let listen1 = (function () {
                     if (tmp_scope !== undefined) {
                         clearInterval(timer);
                         ngScope = tmp_scope;
-                        console.log("Init Listen1 API Successfully.");
                         resolve(ngScope);
-                    } else if (i >= 10) {
+                    } else if (i >= 20) {
                         clearInterval(timer);
-                        reject("Init Timeout.");
-                    } else {
-                        console.log("Get Angular scope failed. Retry ", i);
-                    }
-
+                        reject("Listen1 API 加载失败!");
+                    } else
+                        console.log("获取 Angular scope 失败. 正在重试第" + i + "次");
                 }, 100);// 100ms
 
             });
@@ -187,6 +192,7 @@ let listen1 = (function () {
                 return s4() + s4() + "-" + s4() + "-" + s4() + "-" +
                     s4() + "-" + s4() + s4() + s4();
             }
+
             let isExist = false;
             let idList = localStorage.getObject("playerlists");
 

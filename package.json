@@ -1,8 +1,8 @@
 {
   "name": "listen1_manager",
-  "version": "0.3.1",
+  "version": "0.3.2",
   "author": "NoCLin <engineelin@gmail.com>",
-  "description": "An electron-vue project",
+  "description": "A cross-platform music management solution.",
   "repository": "https://github.com/NoCLin/listen1_manager",
   "keywords": [
     "listen1",
@@ -22,12 +22,13 @@
     "pack": "npm run pack:main && npm run pack:renderer",
     "pack:main": "cross-env NODE_ENV=production webpack --progress --colors --config .electron-vue/webpack.main.config.js",
     "pack:renderer": "cross-env NODE_ENV=production webpack --progress --colors --config .electron-vue/webpack.renderer.config.js",
-    "postinstall": ""
+    "postinstall": "",
+    "test": "mocha --compilers js:babel-core/register"
   },
   "build": {
     "productName": "listen1_manager",
     "appId": "io.github.noclin.listen1_manager",
-    "asar": false,
+    "asar": true,
     "artifactName": "${name}_${version}_${os}${arch}.${ext}",
     "directories": {
       "output": "build"
@@ -80,6 +81,7 @@
     "babel-loader": "^7.1.1",
     "babel-plugin-transform-runtime": "^6.23.0",
     "babel-preset-env": "^1.6.0",
+    "babel-preset-es2015": "^6.24.1",
     "babel-preset-stage-0": "^6.24.1",
     "babel-register": "^6.24.1",
     "babili-webpack-plugin": "^0.1.2",
@@ -98,8 +100,10 @@
     "extract-text-webpack-plugin": "^3.0.0",
     "file-loader": "^0.11.2",
     "html-webpack-plugin": "^2.30.1",
+    "mocha": "^5.0.5",
     "multispinner": "^0.2.1",
     "node-loader": "^0.6.0",
+    "should": "^13.2.1",
     "style-loader": "^0.18.2",
     "url-loader": "^0.5.9",
     "vue-html-loader": "^1.2.4",

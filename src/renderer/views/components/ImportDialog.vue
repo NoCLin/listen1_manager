@@ -48,9 +48,9 @@
                     <el-form @submit.native.prevent>
                         <el-form-item label="ID/URL">
                             <el-input placeholder="请输入内容" v-model="input.playlist_id_or_url"
-                                      @keyup.enter.native="handleSearchPlayList(input.playlist_id_or_url)">
+                                      @keyup.enter.native="handleBySearchPlayList(input.playlist_id_or_url)">
                                 <el-button slot="append" icon="el-icon-search"
-                                           @click="handleSearchPlayList(input.playlist_id_or_url)">
+                                           @click="handleBySearchPlayList(input.playlist_id_or_url)">
                                 </el-button>
                             </el-input>
                         </el-form-item>
@@ -71,7 +71,7 @@
                             </el-input>
 
                         </el-form-item>
-                        <el-button size="large" icon="el-icon-search" @click="handleSearchTextList">搜索
+                        <el-button size="large" icon="el-icon-search" @click="handleSearchByTextList">搜索
                         </el-button>
 
                     </el-form>
@@ -155,16 +155,28 @@
                 this.$emit("close");
             },
 
-            handleSearchTextList: function () {
+            handleSearchByTextList: function () {
                 console.log(this.input.text_list);
                 let titles = this.input.text_list.split("\n");
                 console.log(titles);
                 alert("Coming Soon")
             },
-            handleSearchPlayList: function (urlOrId) {
-                let playlist_id = this.parserUrlToId(urlOrId);
+            handleBySearchPlayList: function (urlOrId) {
+                let playlist_id;
+                if (urlOrId.startsWith("http")) {
+                    playlist_id = this.parserUrlToId(urlOrId)
+                } else {
+                    let is_id = false;
+                    let providers = ["ne", "qq", "xm"];
+                    for (let i = 0; i < providers.length; i++)
+                        if (urlOrId.startsWith(providers[i]))
+                            is_id = true;
+
+                    playlist_id = is_id ? urlOrId : null;
+                }
+
                 if (playlist_id === null) {
-                    this.$message({showClose: true, message: "输入错误", type: "error"});
+                    this.$message({showClose: true, message: `'${urlOrId}'不是有效链接，也不是有效ID!`, type: "error"});
                     return;
                 }
 
@@ -178,61 +190,8 @@
                     alert(err);
                 });
             },
-            // TODO: 多种url规则匹配
             parserUrlToId: function (url) {
-                String.prototype.getSubStr = function (startStr, endStr) {
-                    let pos_start = this.indexOf(startStr) + startStr.length;
-                    // 如果结束字符为空，则取从开始字符到结束字符的所有字符串
-                    let pos_end = (endStr === "") ? this.length : this.indexOf(endStr, pos_start);
-                    return this.substr(pos_start, pos_end - pos_start);
-                };
-                String.prototype.startWith = function (str) {
-                    let reg = new RegExp("^" + str);
-                    return reg.test(this);
-                };
-
-                // neplaylist_xxx / nealbum_xxx / neartist_xxx
-                //     qqplaylist_xxx / qqalbum_xxx / qqartist_xxx
-                //     xmplaylist_xxx / xmalbum_xxx / xmartist_xxx
-
-                let providers = ["ne", "qq", "xm"];
-                let items = ["playlist", "album", "artist"];
-                for (let i = 0; i < providers.length; i++) {
-                    for (let j = 0; j < items.length; j++) {
-                        if (url.startsWith(providers[i] + items[j] + "_")) {
-                            return url;
-                        }
-                    }
-                }
-
-                let id;
-                // list
-                // http://music.163.com/#/playlist?id=xxx
-                // https://y.qq.com/n/yqq/playsquare/xxx.html#stat=y_new.index.playlist.name
-                // http://www.xiami.com/collect/360902783?spm=a1z1s.3061697.6856253.5.A9ep7S
-
-                // artist
-
-                // album
-                // http://www.xiami.com/album/xxx?spm=a1z1s.6843761.1110925389.3.ZgHIvY
-
-                if (url.startsWith("http://music.163.com/#/playlist")) {
-                    id = url.getSubStr("http://music.163.com/#/playlist?id=", "&");
-                    if (id === "") id = url.getSubStr("http://music.163.com/#/playlist?id=", "");
-                    if (id !== "") return "neplaylist_" + id;
-                }
-                if (url.startsWith("https://y.qq.com/n/yqq/playsquare/")) {
-                    id = url.getSubStr("https://y.qq.com/n/yqq/playsquare/", ".html");
-                    if (id !== "") return "qqplaylist_" + id;
-                }
-                if (url.startsWith("http://www.xiami.com/collect/")) {
-                    id = url.getSubStr("http://www.xiami.com/collect/", "?spm");// 注意不带spm的情况
-                    if (id === "") id = url.getSubStr("http://www.xiami.com/collect/", "");
-                    if (id !== "") return "xmplaylist_" + id;
-                }
-
-                return null;
-
+                return utils.getIdByURL(url);
             },
 
         },
